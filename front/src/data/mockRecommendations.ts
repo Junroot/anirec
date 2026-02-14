@@ -1,0 +1,85 @@
+import type { Recommendation, TasteGroup } from '@/types/recommendation';
+
+export const mockRecommendations: Recommendation[] = [
+  {
+    id: 'rec-001',
+    animeId: 2904,
+    reason: 'Based on your love for action anime with complex protagonists like Death Note and Attack on Titan.',
+    matchScore: 0.95,
+    tasteGroup: 'tg-001',
+    basedOn: ['Death Note', 'Attack on Titan'],
+    feedback: 'like',
+  },
+  {
+    id: 'rec-002',
+    animeId: 47917,
+    reason: 'Fans of your favorite slice-of-life and music anime frequently enjoy this heartfelt comedy.',
+    matchScore: 0.88,
+    tasteGroup: 'tg-001',
+    basedOn: ['K-ON!', 'Your Lie in April'],
+    feedback: null,
+  },
+  {
+    id: 'rec-003',
+    animeId: 48583,
+    reason: 'Your high ratings for sci-fi action titles suggest you will enjoy this cyberpunk thriller.',
+    matchScore: 0.92,
+    tasteGroup: 'tg-001',
+    basedOn: ['Steins;Gate', 'Cowboy Bebop'],
+    feedback: null,
+  },
+  {
+    id: 'rec-004',
+    animeId: 30831,
+    reason: 'Based on your enjoyment of fantasy adventure comedies like No Game No Life.',
+    matchScore: 0.85,
+    tasteGroup: 'tg-001',
+    basedOn: ['No Game No Life', 'Sword Art Online'],
+    feedback: 'like',
+  },
+  {
+    id: 'rec-005',
+    animeId: 28977,
+    reason: 'Users in your taste group who rated action comedies highly also rated this series highly.',
+    matchScore: 0.78,
+    tasteGroup: 'tg-001',
+    basedOn: ['One Punch Man', 'Gintama'],
+    feedback: null,
+  },
+  {
+    id: 'rec-006',
+    animeId: 199,
+    reason: 'Your appreciation for emotional storytelling and fantasy worlds makes this a perfect match.',
+    matchScore: 0.91,
+    tasteGroup: 'tg-001',
+    basedOn: ['Your Name', 'Fullmetal Alchemist: Brotherhood'],
+    feedback: null,
+  },
+  {
+    id: 'rec-007',
+    animeId: 38524,
+    reason: 'Since you rated Attack on Titan highly, you should not miss this critically acclaimed continuation.',
+    matchScore: 0.97,
+    tasteGroup: 'tg-001',
+    basedOn: ['Attack on Titan'],
+    feedback: 'like',
+  },
+  {
+    id: 'rec-008',
+    animeId: 21519,
+    reason: 'Based on your interest in drama and music genres, this emotional journey is a must-watch.',
+    matchScore: 0.83,
+    tasteGroup: 'tg-001',
+    basedOn: ['K-ON!', 'Your Name'],
+    feedback: 'dislike',
+  },
+];
+
+export const mockTasteGroup: TasteGroup = {
+  id: 'tg-001',
+  name: 'Action Enthusiasts',
+  description:
+    'A community of viewers who gravitate toward high-energy action series with compelling narratives, strategic battles, and strong character development. Members also enjoy sci-fi and fantasy elements.',
+  topGenres: ['Action', 'Sci-Fi', 'Fantasy', 'Drama', 'Thriller'],
+  memberCount: 24850,
+};
