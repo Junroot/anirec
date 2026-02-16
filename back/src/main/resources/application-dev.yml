@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/anirec?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mysql://localhost:13306/anirec?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: anirec
     password: anirec
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -11,10 +11,17 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
   data:
     redis:
       host: localhost
       port: 6379
+
+app:
+  supabase:
+    url: ${SUPABASE_URL:https://placeholder.supabase.co}
+  cors:
+    allowed-origins: http://localhost:5173
 
 logging:
   level:

@@ -10,3 +10,9 @@ spring:
     default-property-inclusion: non_null
     deserialization:
       fail-on-unknown-properties: false
+
+app:
+  supabase:
+    url: ""
+  cors:
+    allowed-origins: ""
