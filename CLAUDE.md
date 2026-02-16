@@ -14,7 +14,9 @@ AniRec은 애니메이션 인덱스 & AI 추천 플랫폼입니다. MAL(MyAnimeL
 - `dist/` — 빌드 결과물 (루트에서 서빙, `front/`에서 빌드)
 - `docs/` — 제품 문서
 
-백엔드(Spring Boot + Kotlin)와 추천 엔진(Python/scikit-learn)은 계획 단계이며 아직 구현되지 않았습니다.
+- `back/` — Spring Boot 3 + Kotlin 백엔드 API
+
+추천 엔진(Python/scikit-learn)은 계획 단계이며 아직 구현되지 않았습니다.
 
 ## 프론트엔드 명령어
 
@@ -59,6 +61,36 @@ npm run preview   # 프로덕션 빌드 미리보기
 
 **아이콘:** lucide-react
 
+## 백엔드 명령어
+
+모든 명령어는 `back/` 디렉토리에서 실행:
+
+```bash
+cd back
+docker compose up -d    # MySQL 8 + Redis 7 로컬 인프라 기동
+./gradlew build         # 컴파일 + 테스트
+./gradlew bootRun       # 앱 실행 (8080 포트)
+```
+
+## 백엔드 아키텍처
+
+**기술 스택:** Spring Boot 3 + Kotlin + WebFlux + Data JPA + Data Redis Reactive + Spring Security + OAuth2 Client
+
+**빌드:** Gradle (Kotlin DSL) + JDK 21
+
+**주요 의존성:** QueryDSL 5 (kapt), JJWT 0.12, kotlinx-coroutines, Testcontainers (MySQL)
+
+**`back/src/main/kotlin/com/anirec/` 패키지 구조:**
+- `domain/auth/` — 인증 모듈
+- `domain/anime/` — MAL 연동 + 캐싱
+- `domain/rating/` — 개인 평점
+- `domain/recommendation/` — 추천 엔진 연동
+- `global/config/` — 공통 설정
+- `global/exception/` — 글로벌 예외 처리
+- `global/security/` — Security 설정
+
+**설정 프로필:** `dev` (로컬 MySQL/Redis), `prod` (환경변수 기반), `test` (H2 인메모리)
+
 ## 현재 상태
 
-프론트엔드는 목 데이터로 완전히 구성된 상태이며, 실제 API 연동은 아직 없습니다. 인증은 localStorage를 통한 가짜 구현입니다. 모든 애니메이션 데이터는 `data/mockAnime.ts`에서 제공됩니다. 다음 주요 단계는 Jikan API(MAL) 연동과 Spring Boot 백엔드 구축입니다.
+프론트엔드는 목 데이터로 완전히 구성된 상태이며, 실제 API 연동은 아직 없습니다. 인증은 localStorage를 통한 가짜 구현입니다. 모든 애니메이션 데이터는 `data/mockAnime.ts`에서 제공됩니다. 백엔드는 프로젝트 스캐폴딩만 완료된 상태이며, 기능 구현(컨트롤러, 서비스, 리포지토리 등)은 아직 없습니다. 다음 주요 단계는 Jikan API(MAL) 연동과 백엔드 기능 구현입니다.
