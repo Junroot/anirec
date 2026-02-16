@@ -14,7 +14,7 @@ const navLinks = [
 ];
 
 export function Navbar() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, loading, logout } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -47,7 +47,9 @@ export function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            {isAuthenticated ? (
+            {loading ? (
+              <div className="w-24 h-8" />
+            ) : isAuthenticated ? (
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <Avatar name={user?.username ?? ''} size="sm" />
@@ -100,7 +102,9 @@ export function Navbar() {
               ))}
             </div>
             <div className="mt-4 px-3">
-              {isAuthenticated ? (
+              {loading ? (
+                <div className="h-8" />
+              ) : isAuthenticated ? (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <UserIcon size={16} className="text-text-muted" />

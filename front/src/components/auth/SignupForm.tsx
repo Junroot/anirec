@@ -3,25 +3,40 @@ import { useNavigate, Link } from 'react-router';
 import { Mail, Lock, User, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/useAuth';
-import { SocialLoginButtons } from './SocialLoginButtons';
 
 export function SignupForm() {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const { signup } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    signup(email, username, password);
-    navigate('/');
+    setFormError(null);
+    setIsSubmitting(true);
+    try {
+      await signup(email, username, password);
+      navigate('/');
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Signup failed');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="bg-surface rounded-xl p-8 border border-surface-lighter shadow-2xl">
       <h2 className="text-2xl font-bold text-text-primary mb-2">Create account</h2>
       <p className="text-text-secondary text-sm mb-6">Join AniRec and discover great anime</p>
+
+      {formError && (
+        <div className="mb-4 p-3 rounded-lg bg-error/10 border border-error/30 text-error text-sm">
+          {formError}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -66,18 +81,10 @@ export function SignupForm() {
             />
           </div>
         </div>
-        <Button type="submit" className="w-full gap-2">
+        <Button type="submit" className="w-full gap-2" isLoading={isSubmitting}>
           <UserPlus size={16} /> Create Account
         </Button>
       </form>
-
-      <div className="my-6 flex items-center gap-3">
-        <div className="flex-1 h-px bg-surface-lighter" />
-        <span className="text-xs text-text-muted">or continue with</span>
-        <div className="flex-1 h-px bg-surface-lighter" />
-      </div>
-
-      <SocialLoginButtons />
 
       <p className="text-center text-sm text-text-secondary mt-6">
         Already have an account?{' '}
