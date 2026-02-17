@@ -78,19 +78,28 @@ docker compose up -d    # MySQL 8 + Redis 7 로컬 인프라 기동
 
 **빌드:** Gradle (Kotlin DSL) + JDK 21
 
-**주요 의존성:** QueryDSL 5 (kapt), JJWT 0.12, kotlinx-coroutines, Testcontainers (MySQL)
+**주요 의존성:** QueryDSL 5 (kapt), JJWT 0.12, kotlinx-coroutines, Testcontainers (MySQL), MockWebServer (테스트)
 
 **`back/src/main/kotlin/com/anirec/` 패키지 구조:**
 - `domain/auth/` — 인증 모듈
-- `domain/anime/` — MAL 연동 + 캐싱
+- `domain/anime/` — Jikan API 클라이언트(`client/`), DTO(`dto/`), Redis 캐싱 서비스(`service/`)
 - `domain/rating/` — 개인 평점
 - `domain/recommendation/` — 추천 엔진 연동
 - `global/config/` — 공통 설정
 - `global/exception/` — 글로벌 예외 처리
 - `global/security/` — Security 설정
 
-**설정 프로필:** `dev` (로컬 MySQL/Redis), `prod` (환경변수 기반), `test` (H2 인메모리)
+**설정 프로필:** `dev` (로컬 MySQL/Redis), `prod` (환경변수 기반), `test` (H2 인메모리, Redis autoconfigure 제외)
+
+**백엔드 코드 패턴:**
+- 컨트롤러/서비스에서 Kotlin 코루틴 `suspend` 함수 사용, `awaitSingle()` 패턴으로 Mono → suspend 변환
+- WebClient를 통한 외부 API 호출 (`JikanClient`)
+- Redis 캐싱: cache-aside 패턴 (`AnimeCacheService`), 검색 TTL 1시간, 탑/시즌 TTL 6시간. Redis 장애 시 로그만 남기고 API 직접 호출 fallback
+- 캐시 키: `anime:{operation}:{param=value}:...` 형식, null 파라미터 제외
+- test 프로필에서 Redis가 제외되므로 Redis 의존 빈에 `@ConditionalOnBean(ReactiveRedisConnectionFactory::class)` 필수
+- DTO의 snake_case 필드에 `@JsonProperty` 명시 (전역 네이밍 전략 대신 DTO별 지정)
+- 테스트: MockWebServer로 WebClient 단위 테스트, Testcontainers(redis:7-alpine) + mockk로 캐싱 통합 테스트
 
 ## 현재 상태
 
-프론트엔드는 목 데이터로 완전히 구성된 상태이며, 실제 API 연동은 아직 없습니다. 인증은 localStorage를 통한 가짜 구현입니다. 모든 애니메이션 데이터는 `data/mockAnime.ts`에서 제공됩니다. 백엔드는 프로젝트 스캐폴딩만 완료된 상태이며, 기능 구현(컨트롤러, 서비스, 리포지토리 등)은 아직 없습니다. 다음 주요 단계는 Jikan API(MAL) 연동과 백엔드 기능 구현입니다.
+프론트엔드는 목 데이터로 완전히 구성된 상태이며, 실제 API 연동은 아직 없습니다. 인증은 localStorage를 통한 가짜 구현입니다. 모든 애니메이션 데이터는 `data/mockAnime.ts`에서 제공됩니다. 백엔드는 인증 모듈(`domain/auth/`)과 Jikan API 클라이언트 + Redis 캐싱 레이어(`domain/anime/`)가 구현된 상태입니다. `domain/rating/`, `domain/recommendation/`은 아직 미구현입니다. 다음 주요 단계는 애니메이션 REST API 컨트롤러 구현과 프론트엔드-백엔드 연동입니다.
