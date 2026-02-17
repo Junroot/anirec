@@ -12,11 +12,11 @@ export function SeasonalSection({ anime, onRate }: SeasonalSectionProps) {
   const currentYear = new Date().getFullYear();
 
   return (
-    <section className="py-10 bg-surface/30">
+    <section className="py-10 bg-surface-container/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2 mb-6">
           <Calendar size={24} className="text-info" />
-          <h2 className="text-2xl font-bold text-text-primary">{currentSeason} {currentYear} Anime</h2>
+          <h2 className="text-2xl font-bold text-on-surface">{currentSeason} {currentYear} Anime</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {anime.slice(0, 6).map(a => (
