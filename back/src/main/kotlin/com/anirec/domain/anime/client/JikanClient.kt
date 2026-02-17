@@ -17,6 +17,7 @@ class JikanClient(private val jikanWebClient: WebClient) {
         status: String? = null,
         orderBy: String? = null,
         sort: String? = null,
+        genres: String? = null,
     ): JikanResponse =
         jikanWebClient.get()
             .uri { builder ->
@@ -28,6 +29,7 @@ class JikanClient(private val jikanWebClient: WebClient) {
                     .queryParamIfPresent("status", status)
                     .queryParamIfPresent("order_by", orderBy)
                     .queryParamIfPresent("sort", sort)
+                    .queryParamIfPresent("genres", genres)
                     .build()
             }
             .retrieve()

@@ -3,6 +3,7 @@ package com.anirec.global.security
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder
 import org.springframework.security.config.web.server.ServerHttpSecurity
@@ -30,6 +31,7 @@ class SecurityConfig {
             .formLogin { it.disable() }
             .authorizeExchange {
                 it.pathMatchers("/actuator/health").permitAll()
+                it.pathMatchers(HttpMethod.GET, "/api/anime", "/api/anime/**").permitAll()
                 it.pathMatchers("/api/**").authenticated()
                 it.anyExchange().permitAll()
             }
