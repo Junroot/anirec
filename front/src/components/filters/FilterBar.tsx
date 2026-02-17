@@ -55,11 +55,11 @@ export function FilterBar({ filters, onFilterChange, onReset, resultCount }: Fil
           options={yearOptions}
         />
         {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={onReset} className="text-text-muted">
+          <Button variant="ghost" size="sm" onClick={onReset} className="text-outline">
             <RotateCcw size={14} /> Reset
           </Button>
         )}
-        <span className="text-sm text-text-muted ml-auto">{resultCount} results</span>
+        <span className="text-sm text-outline ml-auto">{resultCount} results</span>
       </div>
     </div>
   );

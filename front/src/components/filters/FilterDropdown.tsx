@@ -10,7 +10,7 @@ export function FilterDropdown({ label, value, onChange, options }: FilterDropdo
     <select
       value={value}
       onChange={e => onChange(e.target.value)}
-      className="px-3 py-2.5 bg-surface-light border border-surface-lighter rounded-lg text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors appearance-none cursor-pointer"
+      className="px-3 py-2.5 bg-surface-container-high border border-outline-variant rounded-lg text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors appearance-none cursor-pointer"
       aria-label={label}
     >
       <option value="">{label}</option>

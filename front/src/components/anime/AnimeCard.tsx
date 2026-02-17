@@ -10,7 +10,7 @@ interface AnimeCardProps {
 
 export function AnimeCard({ anime, onRate }: AnimeCardProps) {
   return (
-    <div className="group relative rounded-xl overflow-hidden bg-surface shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5">
+    <div className="group relative rounded-xl overflow-hidden bg-surface-container shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5">
       <a href={anime.url} target="_blank" rel="noopener noreferrer" className="block">
         <div className="relative aspect-[225/320] overflow-hidden">
           <img
@@ -20,14 +20,14 @@ export function AnimeCard({ anime, onRate }: AnimeCardProps) {
             loading="lazy"
           />
           <div className="absolute top-2 right-2">
-            <Badge variant="warning" className="flex items-center gap-1 !bg-yellow-500/90 !text-black font-bold">
+            <Badge variant="warning" className="flex items-center gap-1 !bg-warning/90 !text-surface font-bold">
               <Star size={12} fill="currentColor" />
               {anime.score.toFixed(1)}
             </Badge>
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
             <div className="absolute bottom-0 left-0 right-0 p-3 space-y-2">
-              <div className="text-xs text-gray-300 space-y-1">
+              <div className="text-xs text-on-surface-variant space-y-1">
                 {anime.studios.length > 0 && (
                   <p>Studio: {anime.studios.map(s => s.name).join(', ')}</p>
                 )}
@@ -39,7 +39,7 @@ export function AnimeCard({ anime, onRate }: AnimeCardProps) {
               {onRate && (
                 <button
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRate(anime); }}
-                  className="w-full py-1.5 rounded-lg bg-primary hover:bg-primary-dark text-white text-xs font-medium transition-colors flex items-center justify-center gap-1"
+                  className="w-full py-1.5 rounded-lg bg-primary hover:bg-primary/80 text-on-primary text-xs font-medium transition-colors flex items-center justify-center gap-1"
                 >
                   <Star size={12} /> Rate
                 </button>
@@ -49,10 +49,10 @@ export function AnimeCard({ anime, onRate }: AnimeCardProps) {
         </div>
       </a>
       <div className="p-3">
-        <h3 className="text-sm font-medium text-text-primary line-clamp-2 mb-2 leading-tight">
+        <h3 className="text-sm font-medium text-on-surface line-clamp-2 mb-2 leading-tight">
           {anime.title}
         </h3>
-        <div className="flex items-center gap-2 text-xs text-text-muted mb-2">
+        <div className="flex items-center gap-2 text-xs text-outline mb-2">
           <span className="flex items-center gap-1">
             <Play size={10} />
             {anime.type}
