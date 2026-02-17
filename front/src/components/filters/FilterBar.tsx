@@ -1,9 +1,10 @@
 import { RotateCcw } from 'lucide-react';
 import { FilterDropdown } from './FilterDropdown';
-import { ProducerAutocomplete } from './ProducerAutocomplete';
+import { SearchAutocomplete } from './SearchAutocomplete';
 import { SortSelector } from './SortSelector';
 import { Button } from '@/components/ui/Button';
-import { GENRES, FORMATS, STATUSES } from '@/data/constants';
+import { searchGenres, searchProducers } from '@/api/animeApi';
+import { FORMATS, STATUSES } from '@/data/constants';
 import type { FilterState } from '@/hooks/useFilterState';
 
 interface FilterBarProps {
@@ -20,11 +21,11 @@ export function FilterBar({ filters, onFilterChange, onReset, resultCount }: Fil
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 flex flex-wrap gap-2">
-          <FilterDropdown
-            label="Genre"
+          <SearchAutocomplete
             value={filters.genre}
             onChange={v => onFilterChange('genre', v)}
-            options={GENRES}
+            placeholder="Genre"
+            searchFn={searchGenres}
           />
           <FilterDropdown
             label="Format"
@@ -38,9 +39,11 @@ export function FilterBar({ filters, onFilterChange, onReset, resultCount }: Fil
             onChange={v => onFilterChange('status', v)}
             options={STATUSES}
           />
-          <ProducerAutocomplete
+          <SearchAutocomplete
             value={filters.producer}
             onChange={v => onFilterChange('producer', v)}
+            placeholder="Producer"
+            searchFn={searchProducers}
           />
         </div>
         <SortSelector value={filters.sort} onChange={v => onFilterChange('sort', v)} />

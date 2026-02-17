@@ -173,6 +173,47 @@ class JikanClientTest {
         assertTrue(path.contains("page=1"))
     }
 
+    private val genreResponse = """
+        {
+          "data": [
+            {
+              "mal_id": 1,
+              "name": "Action",
+              "url": "https://myanimelist.net/anime/genre/1/Action",
+              "count": 5439
+            },
+            {
+              "mal_id": 2,
+              "name": "Adventure",
+              "url": "https://myanimelist.net/anime/genre/2/Adventure",
+              "count": 4123
+            }
+          ]
+        }
+    """.trimIndent()
+
+    @Test
+    fun `getAnimeGenres calls GET genres anime`() = runTest {
+        mockWebServer.enqueue(
+            MockResponse()
+                .setBody(genreResponse)
+                .addHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+        )
+
+        val result = jikanClient.getAnimeGenres()
+
+        assertEquals(2, result.data.size)
+        assertEquals(1L, result.data[0].malId)
+        assertEquals("Action", result.data[0].name)
+        assertEquals(5439, result.data[0].count)
+        assertEquals(2L, result.data[1].malId)
+        assertEquals("Adventure", result.data[1].name)
+
+        val request = mockWebServer.takeRequest()
+        assertEquals("GET", request.method)
+        assertTrue(request.path!!.startsWith("/genres/anime"))
+    }
+
     private val producerResponse = """
         {
           "pagination": {

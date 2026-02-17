@@ -1,8 +1,7 @@
 package com.anirec.domain.anime.service
 
 import com.anirec.domain.anime.client.JikanClient
-import com.anirec.domain.anime.dto.AnimeDto
-import com.anirec.domain.anime.dto.JikanResponse
+import com.anirec.domain.anime.dto.*
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -45,6 +44,33 @@ class AnimeServiceTest {
                 aired = AnimeDto.Aired("1998-04-03", "1999-04-24"),
                 url = "https://myanimelist.net/anime/1/Cowboy_Bebop",
             )
+        ),
+    )
+
+    private val sampleGenreResponse = JikanGenreResponse(
+        data = listOf(
+            GenreDto(malId = 1, name = "Action", count = 5439),
+            GenreDto(malId = 4, name = "Comedy", count = 7000),
+            GenreDto(malId = 8, name = "Drama", count = 3000),
+        ),
+    )
+
+    private val sampleProducerResponse = JikanProducerResponse(
+        pagination = JikanResponse.Pagination(
+            lastVisiblePage = 1,
+            hasNextPage = false,
+            currentPage = 1,
+            items = JikanResponse.PaginationItems(count = 1, total = 1, perPage = 10),
+        ),
+        data = listOf(
+            ProducerDto(
+                malId = 569,
+                titles = listOf(
+                    ProducerDto.ProducerTitle("Default", "MAPPA"),
+                    ProducerDto.ProducerTitle("Japanese", "MAPPA"),
+                ),
+                count = 150,
+            ),
         ),
     )
 
@@ -96,6 +122,41 @@ class AnimeServiceTest {
             coVerify(exactly = 1) { animeCacheService.getCurrentSeasonAnime(page = 1) }
             coVerify(exactly = 0) { jikanClient.getCurrentSeasonAnime(any(), any()) }
         }
+
+        @Test
+        fun `searchGenres delegates to AnimeCacheService and filters by query`() = runTest {
+            coEvery { animeCacheService.getAnimeGenres() } returns sampleGenreResponse
+
+            val result = service.searchGenres(q = "act")
+
+            assertEquals(1, result.size)
+            assertEquals(1L, result[0].id)
+            assertEquals("Action", result[0].name)
+            coVerify(exactly = 1) { animeCacheService.getAnimeGenres() }
+            coVerify(exactly = 0) { jikanClient.getAnimeGenres() }
+        }
+
+        @Test
+        fun `searchGenres returns all when query is null`() = runTest {
+            coEvery { animeCacheService.getAnimeGenres() } returns sampleGenreResponse
+
+            val result = service.searchGenres(q = null)
+
+            assertEquals(3, result.size)
+        }
+
+        @Test
+        fun `searchProducers delegates to AnimeCacheService`() = runTest {
+            coEvery { animeCacheService.searchProducers(q = "mappa", page = 1, limit = 10) } returns sampleProducerResponse
+
+            val result = service.searchProducers(q = "mappa", page = 1, limit = 10)
+
+            assertEquals(1, result.size)
+            assertEquals(569L, result[0].id)
+            assertEquals("MAPPA", result[0].name)
+            coVerify(exactly = 1) { animeCacheService.searchProducers(q = "mappa", page = 1, limit = 10) }
+            coVerify(exactly = 0) { jikanClient.searchProducers(any(), any(), any()) }
+        }
     }
 
     @Nested
@@ -141,6 +202,30 @@ class AnimeServiceTest {
 
             assertEquals(1, result.data.size)
             coVerify(exactly = 1) { jikanClient.getCurrentSeasonAnime(page = 1) }
+        }
+
+        @Test
+        fun `searchGenres falls back to JikanClient`() = runTest {
+            coEvery { jikanClient.getAnimeGenres() } returns sampleGenreResponse
+
+            val result = service.searchGenres(q = "drama")
+
+            assertEquals(1, result.size)
+            assertEquals(8L, result[0].id)
+            assertEquals("Drama", result[0].name)
+            coVerify(exactly = 1) { jikanClient.getAnimeGenres() }
+        }
+
+        @Test
+        fun `searchProducers falls back to JikanClient`() = runTest {
+            coEvery { jikanClient.searchProducers(q = "mappa", page = 1, limit = 10) } returns sampleProducerResponse
+
+            val result = service.searchProducers(q = "mappa", page = 1, limit = 10)
+
+            assertEquals(1, result.size)
+            assertEquals(569L, result[0].id)
+            assertEquals("MAPPA", result[0].name)
+            coVerify(exactly = 1) { jikanClient.searchProducers(q = "mappa", page = 1, limit = 10) }
         }
     }
 }

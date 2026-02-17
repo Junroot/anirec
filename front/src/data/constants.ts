@@ -1,21 +1,3 @@
-export const GENRES: { value: string; label: string }[] = [
-  { value: '1', label: 'Action' },
-  { value: '2', label: 'Adventure' },
-  { value: '4', label: 'Comedy' },
-  { value: '8', label: 'Drama' },
-  { value: '10', label: 'Fantasy' },
-  { value: '14', label: 'Horror' },
-  { value: '18', label: 'Mecha' },
-  { value: '19', label: 'Music' },
-  { value: '7', label: 'Mystery' },
-  { value: '22', label: 'Romance' },
-  { value: '24', label: 'Sci-Fi' },
-  { value: '36', label: 'Slice of Life' },
-  { value: '30', label: 'Sports' },
-  { value: '37', label: 'Supernatural' },
-  { value: '41', label: 'Suspense' },
-];
-
 export const FORMATS: { value: string; label: string }[] = [
   { value: 'tv', label: 'TV' },
   { value: 'movie', label: 'Movie' },

@@ -1,5 +1,6 @@
 package com.anirec.domain.anime.controller
 
+import com.anirec.domain.anime.dto.GenreSimple
 import com.anirec.domain.anime.dto.JikanResponse
 import com.anirec.domain.anime.dto.ProducerSimple
 import com.anirec.domain.anime.service.AnimeService
@@ -47,6 +48,12 @@ class AnimeController(private val animeService: AnimeService) {
         @RequestParam(required = false) limit: Int?,
     ): JikanResponse =
         animeService.getCurrentSeason(page = page, limit = limit)
+
+    @GetMapping("/genres")
+    suspend fun searchGenres(
+        @RequestParam(required = false) q: String?,
+    ): List<GenreSimple> =
+        animeService.searchGenres(q = q)
 
     @GetMapping("/producers")
     suspend fun searchProducers(

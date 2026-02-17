@@ -1,6 +1,7 @@
 package com.anirec.domain.anime.service
 
 import com.anirec.domain.anime.client.JikanClient
+import com.anirec.domain.anime.dto.GenreSimple
 import com.anirec.domain.anime.dto.JikanResponse
 import com.anirec.domain.anime.dto.ProducerSimple
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,13 +49,24 @@ class AnimeService(
         animeCacheService?.getCurrentSeasonAnime(page, limit)
             ?: jikanClient.getCurrentSeasonAnime(page, limit)
 
+    suspend fun searchGenres(
+        q: String? = null,
+    ): List<GenreSimple> {
+        val response = animeCacheService?.getAnimeGenres()
+            ?: jikanClient.getAnimeGenres()
+        return response.data
+            .filter { q == null || it.name.contains(q, ignoreCase = true) }
+            .map { GenreSimple(id = it.malId, name = it.name) }
+    }
+
     suspend fun searchProducers(
         q: String? = null,
         page: Int? = null,
         limit: Int? = null,
-    ): List<ProducerSimple> =
-        jikanClient.searchProducers(q = q, page = page, limit = limit)
-            .data
+    ): List<ProducerSimple> {
+        val response = animeCacheService?.searchProducers(q = q, page = page, limit = limit)
+            ?: jikanClient.searchProducers(q = q, page = page, limit = limit)
+        return response.data
             .map { dto ->
                 val name = dto.titles
                     ?.firstOrNull { it.type == "Default" }
@@ -63,4 +75,5 @@ class AnimeService(
                     ?: "Unknown"
                 ProducerSimple(id = dto.malId, name = name)
             }
+    }
 }

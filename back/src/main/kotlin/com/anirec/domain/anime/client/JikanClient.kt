@@ -1,5 +1,6 @@
 package com.anirec.domain.anime.client
 
+import com.anirec.domain.anime.dto.JikanGenreResponse
 import com.anirec.domain.anime.dto.JikanProducerResponse
 import com.anirec.domain.anime.dto.JikanResponse
 import kotlinx.coroutines.reactor.awaitSingle
@@ -89,6 +90,16 @@ class JikanClient(private val jikanWebClient: WebClient) {
             }
             .retrieve()
             .bodyToMono(JikanResponse::class.java)
+            .awaitSingle()
+
+    suspend fun getAnimeGenres(): JikanGenreResponse =
+        jikanWebClient.get()
+            .uri { builder ->
+                builder.path("/genres/anime")
+                    .build()
+            }
+            .retrieve()
+            .bodyToMono(JikanGenreResponse::class.java)
             .awaitSingle()
 
     suspend fun searchProducers(

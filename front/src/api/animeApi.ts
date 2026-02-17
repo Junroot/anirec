@@ -46,14 +46,21 @@ export function getCurrentSeasonAnime(
   return apiClient.get('/api/anime/season/now', { page, limit }, signal);
 }
 
-export interface Producer {
+export interface FilterOption {
   id: number;
   name: string;
+}
+
+export function searchGenres(
+  query: string,
+  signal?: AbortSignal,
+): Promise<FilterOption[]> {
+  return apiClient.get('/api/anime/genres', { q: query }, signal);
 }
 
 export function searchProducers(
   query: string,
   signal?: AbortSignal,
-): Promise<Producer[]> {
+): Promise<FilterOption[]> {
   return apiClient.get('/api/anime/producers', { q: query, limit: 10 }, signal);
 }

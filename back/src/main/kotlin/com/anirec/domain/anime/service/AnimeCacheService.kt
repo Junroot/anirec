@@ -1,6 +1,8 @@
 package com.anirec.domain.anime.service
 
 import com.anirec.domain.anime.client.JikanClient
+import com.anirec.domain.anime.dto.JikanGenreResponse
+import com.anirec.domain.anime.dto.JikanProducerResponse
 import com.anirec.domain.anime.dto.JikanResponse
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.reactor.awaitSingle
@@ -44,7 +46,7 @@ class AnimeCacheService(
             "type" to type, "status" to status, "orderBy" to orderBy, "sort" to sort,
             "genres" to genres, "producers" to producers,
         )
-        return getOrFetch(key, SEARCH_TTL) {
+        return getOrFetch(key, SEARCH_TTL, JikanResponse::class.java) {
             jikanClient.searchAnime(query, page, limit, type, status, orderBy, sort, genres, producers)
         }
     }
@@ -55,7 +57,7 @@ class AnimeCacheService(
         filter: String? = null,
     ): JikanResponse {
         val key = buildKey("top", "page" to page, "limit" to limit, "filter" to filter)
-        return getOrFetch(key, TOP_SEASON_TTL) {
+        return getOrFetch(key, TOP_SEASON_TTL, JikanResponse::class.java) {
             jikanClient.getTopAnime(page, limit, filter)
         }
     }
@@ -67,7 +69,7 @@ class AnimeCacheService(
         limit: Int? = null,
     ): JikanResponse {
         val key = buildKey("seasonal", "year" to year, "season" to season, "page" to page, "limit" to limit)
-        return getOrFetch(key, TOP_SEASON_TTL) {
+        return getOrFetch(key, TOP_SEASON_TTL, JikanResponse::class.java) {
             jikanClient.getSeasonalAnime(year, season, page, limit)
         }
     }
@@ -77,17 +79,36 @@ class AnimeCacheService(
         limit: Int? = null,
     ): JikanResponse {
         val key = buildKey("current-season", "page" to page, "limit" to limit)
-        return getOrFetch(key, TOP_SEASON_TTL) {
+        return getOrFetch(key, TOP_SEASON_TTL, JikanResponse::class.java) {
             jikanClient.getCurrentSeasonAnime(page, limit)
         }
     }
 
-    private suspend fun getOrFetch(
+    suspend fun getAnimeGenres(): JikanGenreResponse {
+        val key = buildKey("genres")
+        return getOrFetch(key, TOP_SEASON_TTL, JikanGenreResponse::class.java) {
+            jikanClient.getAnimeGenres()
+        }
+    }
+
+    suspend fun searchProducers(
+        q: String? = null,
+        page: Int? = null,
+        limit: Int? = null,
+    ): JikanProducerResponse {
+        val key = buildKey("producers", "q" to q, "page" to page, "limit" to limit)
+        return getOrFetch(key, SEARCH_TTL, JikanProducerResponse::class.java) {
+            jikanClient.searchProducers(q, page, limit)
+        }
+    }
+
+    private suspend fun <T : Any> getOrFetch(
         key: String,
         ttl: Duration,
-        fetcher: suspend () -> JikanResponse,
-    ): JikanResponse {
-        val cached = get(key)
+        clazz: Class<T>,
+        fetcher: suspend () -> T,
+    ): T {
+        val cached = get(key, clazz)
         if (cached != null) return cached
 
         val response = fetcher()
@@ -95,16 +116,16 @@ class AnimeCacheService(
         return response
     }
 
-    private suspend fun get(key: String): JikanResponse? =
+    private suspend fun <T : Any> get(key: String, clazz: Class<T>): T? =
         try {
             val json = redisTemplate.opsForValue().get(key).awaitSingleOrNull()
-            json?.let { objectMapper.readValue(it, JikanResponse::class.java) }
+            json?.let { objectMapper.readValue(it, clazz) }
         } catch (e: Exception) {
             log.warn("Redis GET failed for key={}: {}", key, e.message)
             null
         }
 
-    private suspend fun put(key: String, response: JikanResponse, ttl: Duration) {
+    private suspend fun put(key: String, response: Any, ttl: Duration) {
         try {
             val json = objectMapper.writeValueAsString(response)
             redisTemplate.opsForValue().set(key, json, ttl).awaitSingle()
