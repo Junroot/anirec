@@ -19,12 +19,14 @@ export function AnimeCard({ anime, onRate }: AnimeCardProps) {
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
           />
-          <div className="absolute top-2 right-2">
-            <Badge variant="warning" className="flex items-center gap-1 !bg-warning/90 !text-surface font-bold">
-              <Star size={12} fill="currentColor" />
-              {anime.score.toFixed(1)}
-            </Badge>
-          </div>
+          {anime.score != null && (
+            <div className="absolute top-2 right-2">
+              <Badge variant="warning" className="flex items-center gap-1 !bg-warning/90 !text-surface font-bold">
+                <Star size={12} fill="currentColor" />
+                {anime.score.toFixed(1)}
+              </Badge>
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
             <div className="absolute bottom-0 left-0 right-0 p-3 space-y-2">
               <div className="text-xs text-on-surface-variant space-y-1">
