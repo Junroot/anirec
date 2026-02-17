@@ -55,7 +55,7 @@ npm run preview   # 프로덕션 빌드 미리보기
 - `AuthLayout` — 중앙 정렬 카드 레이아웃 (로그인/회원가입)
 - `ProtectedRoute` — 미인증 사용자 리다이렉트
 
-**스타일링:** `front/src/index.css`에서 `@theme`(Tailwind v4 문법)으로 정의된 MD3(Material Design 3) 색상 토큰 기반 다크 테마. 주요 토큰: `primary`/`primary-container`(인디고 계열), `surface`/`surface-container`/`surface-container-high`/`surface-container-highest`(배경 계층), `on-surface`/`on-surface-variant`(텍스트), `outline`/`outline-variant`(보조 텍스트/테두리), `tertiary`(강조), `error`/`success`/`warning`/`info`(상태). 조건부 클래스에 `clsx` 사용.
+**스타일링:** `front/src/index.css`에서 `@theme`(Tailwind v4 문법)으로 정의된 MD3(Material Design 3) 색상 토큰 기반 다크 테마. seed 색상 `#6366f1`(인디고), `SchemeTonalSpot` 알고리즘으로 생성된 팔레트. 토큰 그룹: Primary(`primary`/`on-primary`/`primary-container`/`on-primary-container`), Secondary, Tertiary(강조), Error, Surface(`surface`/`surface-dim`/`surface-bright`/`surface-container-lowest`~`highest` 배경 계층, `on-surface`/`on-surface-variant` 텍스트), Outline(`outline`/`outline-variant`), Inverse(`inverse-surface`/`inverse-on-surface`/`inverse-primary`). 커스텀 시맨틱: `success`/`warning`/`info`. 조건부 클래스에 `clsx` 사용.
 
 **차트:** recharts 라이브러리로 통계 시각화 (장르 바 차트, 평점 히스토그램, 월별 히스토리, 탑 스튜디오).
 
@@ -102,4 +102,4 @@ docker compose up -d    # MySQL 8 + Redis 7 로컬 인프라 기동
 
 ## 현재 상태
 
-프론트엔드는 목 데이터로 완전히 구성된 상태이며, 실제 API 연동은 아직 없습니다. 인증은 localStorage를 통한 가짜 구현입니다. 모든 애니메이션 데이터는 `data/mockAnime.ts`에서 제공됩니다. 백엔드는 인증 모듈(`domain/auth/`)과 Jikan API 클라이언트 + Redis 캐싱 레이어(`domain/anime/`)가 구현된 상태입니다. `domain/rating/`, `domain/recommendation/`은 아직 미구현입니다. 다음 주요 단계는 애니메이션 REST API 컨트롤러 구현과 프론트엔드-백엔드 연동입니다.
+프론트엔드는 목 데이터로 완전히 구성된 상태이며, 실제 API 연동은 아직 없습니다. 인증은 localStorage를 통한 가짜 구현입니다. 모든 애니메이션 데이터는 `data/mockAnime.ts`에서 제공됩니다. MD3 디자인 토큰이 `index.css`의 `@theme`에 정의 완료되었고 UI/레이아웃 공통 컴포넌트(Navbar, Footer, Button, Modal, Badge 등)는 MD3 토큰으로 마이그레이션됨. 나머지 컴포넌트(~30개 파일)는 아직 이전 토큰명을 참조하므로 후속 마이그레이션 필요. 백엔드는 인증 모듈(`domain/auth/`)과 Jikan API 클라이언트 + Redis 캐싱 레이어(`domain/anime/`)가 구현된 상태입니다. `domain/rating/`, `domain/recommendation/`은 아직 미구현입니다. 다음 주요 단계는 나머지 컴포넌트 MD3 토큰 마이그레이션, 애니메이션 REST API 컨트롤러 구현, 프론트엔드-백엔드 연동입니다.
