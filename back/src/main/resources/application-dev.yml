@@ -22,6 +22,8 @@ app:
     url: ${SUPABASE_URL:https://placeholder.supabase.co}
   cors:
     allowed-origins: http://localhost:5173
+  jikan:
+    base-url: "https://api.jikan.moe/v4"
 
 logging:
   level:
