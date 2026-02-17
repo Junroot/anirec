@@ -37,18 +37,18 @@ export function RatingModal({ anime, isOpen, onClose, onSubmit }: RatingModalPro
             className="w-16 h-22 rounded-lg object-cover shrink-0"
           />
           <div>
-            <h4 className="font-medium text-text-primary">{anime.title}</h4>
-            <p className="text-sm text-text-muted mt-1">{anime.type} · {anime.episodes ?? '?'} episodes</p>
+            <h4 className="font-medium text-on-surface">{anime.title}</h4>
+            <p className="text-sm text-outline mt-1">{anime.type} · {anime.episodes ?? '?'} episodes</p>
           </div>
         </div>
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-text-secondary">Your Rating</span>
+            <span className="text-sm text-on-surface-variant">Your Rating</span>
             <button
               type="button"
               onClick={() => setUseSlider(!useSlider)}
-              className="text-xs text-primary-light hover:text-primary transition-colors"
+              className="text-xs text-primary-container hover:text-primary transition-colors"
             >
               {useSlider ? 'Use stars' : 'Use slider'}
             </button>

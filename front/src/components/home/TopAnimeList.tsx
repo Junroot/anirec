@@ -12,7 +12,7 @@ export function TopAnimeList({ anime }: TopAnimeListProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2 mb-6">
           <Trophy size={24} className="text-warning" />
-          <h2 className="text-2xl font-bold text-text-primary">Top Anime</h2>
+          <h2 className="text-2xl font-bold text-on-surface">Top Anime</h2>
         </div>
         <div className="space-y-2 max-w-3xl">
           {anime.slice(0, 10).map((a, i) => (
