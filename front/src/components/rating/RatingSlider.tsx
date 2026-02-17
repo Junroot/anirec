@@ -7,7 +7,7 @@ export function RatingSlider({ value, onChange }: RatingSliderProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-text-secondary">Rating</span>
+        <span className="text-sm text-on-surface-variant">Rating</span>
         <span className="text-lg font-bold text-primary">{value}</span>
       </div>
       <input
@@ -17,9 +17,9 @@ export function RatingSlider({ value, onChange }: RatingSliderProps) {
         step={1}
         value={value}
         onChange={e => onChange(Number(e.target.value))}
-        className="w-full h-2 rounded-full appearance-none cursor-pointer bg-surface-lighter accent-primary"
+        className="w-full h-2 rounded-full appearance-none cursor-pointer bg-surface-container-highest accent-primary"
       />
-      <div className="flex justify-between text-xs text-text-muted">
+      <div className="flex justify-between text-xs text-outline">
         <span>1</span>
         <span>5</span>
         <span>10</span>

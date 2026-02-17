@@ -28,12 +28,12 @@ export function RatingInput({ value, onChange, max = 10 }: RatingInputProps) {
               'transition-colors',
               (hover || value) >= star
                 ? 'text-warning fill-warning'
-                : 'text-surface-lighter'
+                : 'text-surface-container-highest'
             )}
           />
         </button>
       ))}
-      <span className="ml-2 text-sm font-medium text-text-secondary">
+      <span className="ml-2 text-sm font-medium text-on-surface-variant">
         {hover || value || 0}/10
       </span>
     </div>

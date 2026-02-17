@@ -15,23 +15,23 @@ interface RecommendationSectionProps {
 export function RecommendationSection({ recommendations, animeMap, tasteGroup, onFeedback, onRate }: RecommendationSectionProps) {
   return (
     <div className="space-y-8">
-      <div className="bg-surface rounded-xl border border-surface-lighter p-6">
+      <div className="bg-surface-container rounded-xl border border-outline-variant p-6">
         <div className="flex items-center gap-2 mb-3">
-          <Sparkles size={20} className="text-accent" />
-          <h3 className="font-semibold text-text-primary">Your Taste Group</h3>
+          <Sparkles size={20} className="text-tertiary" />
+          <h3 className="font-semibold text-on-surface">Your Taste Group</h3>
         </div>
-        <p className="text-lg font-medium text-primary-light mb-2">{tasteGroup.name}</p>
-        <p className="text-sm text-text-secondary mb-4">{tasteGroup.description}</p>
+        <p className="text-lg font-medium text-primary-container mb-2">{tasteGroup.name}</p>
+        <p className="text-sm text-on-surface-variant mb-4">{tasteGroup.description}</p>
         <div className="flex flex-wrap gap-2">
           {tasteGroup.topGenres.map(genre => (
             <Badge key={genre} variant="primary">{genre}</Badge>
           ))}
         </div>
-        <p className="text-xs text-text-muted mt-3">{tasteGroup.memberCount.toLocaleString()} members in this group</p>
+        <p className="text-xs text-outline mt-3">{tasteGroup.memberCount.toLocaleString()} members in this group</p>
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-xl font-bold text-text-primary flex items-center gap-2">
+        <h3 className="text-xl font-bold text-on-surface flex items-center gap-2">
           <Sparkles size={20} className="text-primary" />
           Recommended for You
         </h3>

@@ -38,11 +38,11 @@ export function FilterBar({ filters, onFilterChange, onReset, resultCount }: Fil
           options={FORMATS}
         />
         {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={onReset} className="text-on-surface-variant">
+          <Button variant="ghost" size="sm" onClick={onReset} className="text-outline">
             <RotateCcw size={14} /> Reset
           </Button>
         )}
-        <span className="text-sm text-on-surface-variant ml-auto">{resultCount} results</span>
+        <span className="text-sm text-outline ml-auto">{resultCount} results</span>
       </div>
     </div>
   );

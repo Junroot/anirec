@@ -1,5 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import type { RatingDistribution } from '@/types/stats';
+import { CHART_PRIMARY, CHART_AXIS, CHART_TOOLTIP_CONTENT_STYLE, CHART_TOOLTIP_LABEL_STYLE } from '@/data/chartColors';
 
 interface RatingHistogramProps {
   data: RatingDistribution[];
@@ -7,19 +8,19 @@ interface RatingHistogramProps {
 
 export function RatingHistogram({ data }: RatingHistogramProps) {
   return (
-    <div className="bg-surface rounded-xl border border-surface-lighter p-5">
-      <h3 className="text-lg font-semibold text-text-primary mb-4">Rating Distribution</h3>
+    <div className="bg-surface-container rounded-xl border border-outline-variant p-5">
+      <h3 className="text-lg font-semibold text-on-surface mb-4">Rating Distribution</h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data}>
-          <XAxis dataKey="score" stroke="#6b6985" fontSize={12} />
-          <YAxis stroke="#6b6985" fontSize={12} />
+          <XAxis dataKey="score" stroke={CHART_AXIS} fontSize={12} />
+          <YAxis stroke={CHART_AXIS} fontSize={12} />
           <Tooltip
-            contentStyle={{ backgroundColor: '#1e1b2e', border: '1px solid #363352', borderRadius: '8px', color: '#f1f0f7' }}
-            labelStyle={{ color: '#a5a3b7' }}
+            contentStyle={CHART_TOOLTIP_CONTENT_STYLE}
+            labelStyle={CHART_TOOLTIP_LABEL_STYLE}
             formatter={(value: number | undefined) => [value ?? 0, 'Count']}
             labelFormatter={(label: React.ReactNode) => `Score: ${label}`}
           />
-          <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="count" fill={CHART_PRIMARY} radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

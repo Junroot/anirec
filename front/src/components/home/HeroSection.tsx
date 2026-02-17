@@ -8,17 +8,17 @@ export function HeroSection() {
 
   return (
     <section className="relative overflow-hidden py-20 sm:py-28">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/5" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-surface to-tertiary/5" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--color-primary)_0%,transparent_50%)] opacity-10" />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-          <span className="bg-gradient-to-r from-primary via-accent to-primary-light bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-primary via-tertiary to-primary-container bg-clip-text text-transparent">
             Discover Your Next
           </span>
           <br />
-          <span className="text-text-primary">Favorite Anime</span>
+          <span className="text-on-surface">Favorite Anime</span>
         </h1>
-        <p className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto mb-10">
+        <p className="text-lg sm:text-xl text-on-surface-variant max-w-2xl mx-auto mb-10">
           Get personalized anime recommendations based on your taste.
           Rate, track, and explore thousands of titles.
         </p>

@@ -15,7 +15,7 @@ export function FeedbackButtons({ feedback, onFeedback }: FeedbackButtonsProps) 
           'p-2 rounded-lg transition-all',
           feedback === 'like'
             ? 'bg-success/20 text-success'
-            : 'text-text-muted hover:bg-surface-lighter hover:text-success'
+            : 'text-outline hover:bg-surface-container-highest hover:text-success'
         )}
         title="Good recommendation"
       >
@@ -27,7 +27,7 @@ export function FeedbackButtons({ feedback, onFeedback }: FeedbackButtonsProps) 
           'p-2 rounded-lg transition-all',
           feedback === 'dislike'
             ? 'bg-error/20 text-error'
-            : 'text-text-muted hover:bg-surface-lighter hover:text-error'
+            : 'text-outline hover:bg-surface-container-highest hover:text-error'
         )}
         title="Not for me"
       >

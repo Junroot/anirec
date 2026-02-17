@@ -14,7 +14,7 @@ interface RecommendationCardProps {
 
 export function RecommendationCard({ recommendation, anime, onFeedback, onRate }: RecommendationCardProps) {
   return (
-    <div className="bg-surface rounded-xl border border-surface-lighter overflow-hidden hover:border-primary/30 transition-colors">
+    <div className="bg-surface-container rounded-xl border border-outline-variant overflow-hidden hover:border-primary/30 transition-colors">
       <div className="flex">
         <a href={anime.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
           <img
@@ -28,7 +28,7 @@ export function RecommendationCard({ recommendation, anime, onFeedback, onRate }
           <div className="flex items-start justify-between gap-2">
             <div>
               <a href={anime.url} target="_blank" rel="noopener noreferrer" className="group">
-                <h3 className="font-medium text-text-primary group-hover:text-primary-light transition-colors flex items-center gap-1">
+                <h3 className="font-medium text-on-surface group-hover:text-primary-container transition-colors flex items-center gap-1">
                   {anime.title}
                   <ExternalLink size={12} className="opacity-0 group-hover:opacity-100" />
                 </h3>
@@ -36,9 +36,9 @@ export function RecommendationCard({ recommendation, anime, onFeedback, onRate }
               <div className="flex items-center gap-2 mt-1">
                 <div className="flex items-center gap-1">
                   <Star size={12} className="text-warning fill-warning" />
-                  <span className="text-xs text-text-secondary">{anime.score.toFixed(1)}</span>
+                  <span className="text-xs text-on-surface-variant">{anime.score.toFixed(1)}</span>
                 </div>
-                <span className="text-xs text-text-muted">{anime.type} · {anime.episodes ?? '?'} eps</span>
+                <span className="text-xs text-outline">{anime.type} · {anime.episodes ?? '?'} eps</span>
               </div>
             </div>
             <Badge variant="primary" className="shrink-0">
@@ -47,7 +47,7 @@ export function RecommendationCard({ recommendation, anime, onFeedback, onRate }
             </Badge>
           </div>
 
-          <p className="text-sm text-text-secondary">{recommendation.reason}</p>
+          <p className="text-sm text-on-surface-variant">{recommendation.reason}</p>
 
           <div className="flex flex-wrap gap-1">
             {anime.genres.slice(0, 3).map(g => (
@@ -58,7 +58,7 @@ export function RecommendationCard({ recommendation, anime, onFeedback, onRate }
           <div className="flex items-center justify-between pt-1">
             <button
               onClick={() => onRate(anime)}
-              className="text-xs text-primary-light hover:text-primary transition-colors font-medium"
+              className="text-xs text-primary-container hover:text-primary transition-colors font-medium"
             >
               Rate this anime
             </button>
