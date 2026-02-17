@@ -16,3 +16,5 @@ app:
     url: ""
   cors:
     allowed-origins: ""
+  jikan:
+    base-url: "https://api.jikan.moe/v4"

@@ -6,7 +6,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 data class AppProperties(
     val supabase: Supabase,
     val cors: Cors,
+    val jikan: Jikan,
 ) {
     data class Supabase(val url: String)
     data class Cors(val allowedOrigins: String)
+    data class Jikan(val baseUrl: String)
 }
