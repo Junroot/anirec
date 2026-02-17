@@ -82,7 +82,7 @@ docker compose up -d    # MySQL 8 + Redis 7 로컬 인프라 기동
 
 **`back/src/main/kotlin/com/anirec/` 패키지 구조:**
 - `domain/auth/` — 인증 모듈
-- `domain/anime/` — Jikan API 클라이언트(`client/`), DTO(`dto/`), Redis 캐싱 서비스(`service/`)
+- `domain/anime/` — Jikan API 클라이언트(`client/`), DTO(`dto/`), 서비스(`service/`: `AnimeService` + `AnimeCacheService`), REST 컨트롤러(`controller/`)
 - `domain/rating/` — 개인 평점
 - `domain/recommendation/` — 추천 엔진 연동
 - `global/config/` — 공통 설정
@@ -98,8 +98,10 @@ docker compose up -d    # MySQL 8 + Redis 7 로컬 인프라 기동
 - 캐시 키: `anime:{operation}:{param=value}:...` 형식, null 파라미터 제외
 - test 프로필에서 Redis가 제외되므로 Redis 의존 빈에 `@ConditionalOnBean(ReactiveRedisConnectionFactory::class)` 필수
 - DTO의 snake_case 필드에 `@JsonProperty` 명시 (전역 네이밍 전략 대신 DTO별 지정)
+- `AnimeService`는 `AnimeCacheService`를 `@Autowired(required = false)` nullable 주입. 있으면 캐시 위임, 없으면(test 프로필) `JikanClient` 직접 호출 fallback
+- SecurityConfig에서 `GET /api/anime/**`는 `permitAll()`, 나머지 `/api/**`는 `authenticated()` (순서 중요)
 - 테스트: MockWebServer로 WebClient 단위 테스트, Testcontainers(redis:7-alpine) + mockk로 캐싱 통합 테스트
 
 ## 현재 상태
 
-프론트엔드는 목 데이터로 완전히 구성된 상태이며, 실제 API 연동은 아직 없습니다. 인증은 localStorage를 통한 가짜 구현입니다. 모든 애니메이션 데이터는 `data/mockAnime.ts`에서 제공됩니다. 백엔드는 인증 모듈(`domain/auth/`)과 Jikan API 클라이언트 + Redis 캐싱 레이어(`domain/anime/`)가 구현된 상태입니다. `domain/rating/`, `domain/recommendation/`은 아직 미구현입니다. 다음 주요 단계는 애니메이션 REST API 컨트롤러 구현과 프론트엔드-백엔드 연동입니다.
+프론트엔드는 목 데이터로 완전히 구성된 상태이며, 실제 API 연동은 아직 없습니다. 인증은 localStorage를 통한 가짜 구현입니다. 모든 애니메이션 데이터는 `data/mockAnime.ts`에서 제공됩니다. 백엔드는 인증 모듈(`domain/auth/`), Jikan API 클라이언트 + Redis 캐싱 레이어, 그리고 Anime REST API(`GET /api/anime`, `/api/anime/top`, `/api/anime/season`, `/api/anime/season/now`)가 구현된 상태입니다. `domain/rating/`, `domain/recommendation/`은 아직 미구현입니다. 다음 주요 단계는 프론트엔드-백엔드 연동입니다.
