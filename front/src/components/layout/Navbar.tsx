@@ -21,11 +21,11 @@ export function Navbar() {
   const visibleLinks = navLinks.filter(link => !link.auth || isAuthenticated);
 
   return (
-    <nav className="sticky top-0 z-40 bg-surface/80 backdrop-blur-xl border-b border-surface-lighter">
+    <nav className="sticky top-0 z-40 bg-surface-container/80 backdrop-blur-xl border-b border-outline-variant">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-gradient-to-r from-primary to-tertiary bg-clip-text text-transparent">
               AniRec
             </span>
           </Link>
@@ -37,8 +37,8 @@ export function Navbar() {
                 to={link.to}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   location.pathname === link.to
-                    ? 'bg-primary/10 text-primary-light'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-surface-light'
+                    ? 'bg-primary-container text-on-primary-container'
+                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
                 }`}
               >
                 {link.label}
@@ -53,11 +53,11 @@ export function Navbar() {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <Avatar name={user?.username ?? ''} size="sm" />
-                  <span className="text-sm text-text-secondary">{user?.username}</span>
+                  <span className="text-sm text-on-surface-variant">{user?.username}</span>
                 </div>
                 <button
                   onClick={logout}
-                  className="p-2 rounded-lg hover:bg-surface-light text-text-muted hover:text-text-primary transition-colors"
+                  className="p-2 rounded-lg hover:bg-surface-container-high text-outline hover:text-on-surface transition-colors"
                   title="Logout"
                 >
                   <LogOut size={18} />
@@ -76,7 +76,7 @@ export function Navbar() {
           </div>
 
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-surface-light text-text-secondary"
+            className="md:hidden p-2 rounded-lg hover:bg-surface-container-high text-on-surface-variant"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             {mobileOpen ? <X size={24} /> : <Menu size={24} />}
@@ -84,7 +84,7 @@ export function Navbar() {
         </div>
 
         {mobileOpen && (
-          <div className="md:hidden pb-4 border-t border-surface-lighter mt-2 pt-4">
+          <div className="md:hidden pb-4 border-t border-outline-variant mt-2 pt-4">
             <div className="flex flex-col gap-1">
               {visibleLinks.map(link => (
                 <Link
@@ -93,8 +93,8 @@ export function Navbar() {
                   onClick={() => setMobileOpen(false)}
                   className={`px-3 py-2 rounded-lg text-sm font-medium ${
                     location.pathname === link.to
-                      ? 'bg-primary/10 text-primary-light'
-                      : 'text-text-secondary hover:bg-surface-light'
+                      ? 'bg-primary-container text-on-primary-container'
+                      : 'text-on-surface-variant hover:bg-surface-container-high'
                   }`}
                 >
                   {link.label}
@@ -107,8 +107,8 @@ export function Navbar() {
               ) : isAuthenticated ? (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <UserIcon size={16} className="text-text-muted" />
-                    <span className="text-sm text-text-secondary">{user?.username}</span>
+                    <UserIcon size={16} className="text-outline" />
+                    <span className="text-sm text-on-surface-variant">{user?.username}</span>
                   </div>
                   <button onClick={() => { logout(); setMobileOpen(false); }} className="text-sm text-error">
                     Logout
