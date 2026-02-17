@@ -55,7 +55,7 @@ npm run preview   # 프로덕션 빌드 미리보기
 - `AuthLayout` — 중앙 정렬 카드 레이아웃 (로그인/회원가입)
 - `ProtectedRoute` — 미인증 사용자 리다이렉트
 
-**스타일링:** `front/src/index.css`에서 `@theme`(Tailwind v4 문법)으로 정의된 커스텀 색상 토큰의 다크 테마. 주요 색상: `primary` (#6366f1 인디고), `surface` (#1e1b2e), `background` (#0f0d1a). 조건부 클래스에 `clsx` 사용.
+**스타일링:** `front/src/index.css`에서 `@theme`(Tailwind v4 문법)으로 정의된 MD3(Material Design 3) 색상 토큰 기반 다크 테마. 주요 토큰: `primary`/`primary-container`(인디고 계열), `surface`/`surface-container`/`surface-container-high`/`surface-container-highest`(배경 계층), `on-surface`/`on-surface-variant`(텍스트), `outline`/`outline-variant`(보조 텍스트/테두리), `tertiary`(강조), `error`/`success`/`warning`/`info`(상태). 조건부 클래스에 `clsx` 사용.
 
 **차트:** recharts 라이브러리로 통계 시각화 (장르 바 차트, 평점 히스토그램, 월별 히스토리, 탑 스튜디오).
 
