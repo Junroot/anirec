@@ -6,19 +6,30 @@ import { TopAnimeList } from '@/components/home/TopAnimeList';
 import { RecommendationSection } from '@/components/recommendation/RecommendationSection';
 import { RatingModal } from '@/components/rating/RatingModal';
 import { useAuth } from '@/hooks/useAuth';
+import { useSeasonalAnime } from '@/hooks/useSeasonalAnime';
+import { useTopAnime } from '@/hooks/useTopAnime';
 import { mockAnime } from '@/data/mockAnime';
 import { mockRecommendations, mockTasteGroup } from '@/data/mockRecommendations';
 import type { Anime } from '@/types/anime';
 import type { WatchStatus } from '@/types/rating';
 
+const SEASONS = ['winter', 'spring', 'summer', 'fall'] as const;
+
 export function HomePage() {
   const { isAuthenticated } = useAuth();
   const [ratingAnime, setRatingAnime] = useState<Anime | null>(null);
 
-  const trendingAnime = mockAnime.slice(0, 6);
-  const seasonalAnime = mockAnime.slice(6, 12);
-  const topAnime = [...mockAnime].sort((a, b) => b.score - a.score);
+  const currentYear = new Date().getFullYear();
+  const currentSeason = SEASONS[Math.floor(new Date().getMonth() / 3)];
 
+  const { data: trendingAnime, isLoading: trendingLoading, error: trendingError } =
+    useSeasonalAnime(undefined, undefined, 1, 6);
+  const { data: seasonalAnime, isLoading: seasonalLoading, error: seasonalError } =
+    useSeasonalAnime(currentYear, currentSeason, 1, 6);
+  const { data: topAnime, isLoading: topLoading, error: topError } =
+    useTopAnime(1, 10);
+
+  // mockAnime is still needed for RecommendationSection until recommendation API is implemented
   const animeMap = new Map(mockAnime.map(a => [a.mal_id, a]));
 
   const handleRate = (anime: Anime) => setRatingAnime(anime);
@@ -29,8 +40,8 @@ export function HomePage() {
   return (
     <div>
       <HeroSection />
-      <TrendingSection anime={trendingAnime} onRate={handleRate} />
-      <SeasonalSection anime={seasonalAnime} onRate={handleRate} />
+      <TrendingSection anime={trendingAnime} onRate={handleRate} isLoading={trendingLoading} error={trendingError} />
+      <SeasonalSection anime={seasonalAnime} onRate={handleRate} isLoading={seasonalLoading} error={seasonalError} />
 
       {isAuthenticated && (
         <section className="py-10">
@@ -46,7 +57,7 @@ export function HomePage() {
         </section>
       )}
 
-      <TopAnimeList anime={topAnime} />
+      <TopAnimeList anime={topAnime} isLoading={topLoading} error={topError} />
 
       <RatingModal
         anime={ratingAnime}
