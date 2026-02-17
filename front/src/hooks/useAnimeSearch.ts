@@ -6,7 +6,7 @@ import type { SearchParams } from '@/api/animeApi';
 
 const DEBOUNCE_MS = 300;
 
-export function useAnimeSearch(params: SearchParams) {
+export function useAnimeSearch(params: SearchParams, key?: number) {
   const { q, type, genres, orderBy, sort, page, limit } = params;
   const [data, setData] = useState<Anime[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
@@ -42,7 +42,7 @@ export function useAnimeSearch(params: SearchParams) {
     return () => {
       clearTimeout(timer);
     };
-  }, [q, type, genres, orderBy, sort, page, limit]);
+  }, [q, type, genres, orderBy, sort, page, limit, key]);
 
   useEffect(() => {
     return () => {
