@@ -35,14 +35,16 @@ class AnimeCacheService(
         status: String? = null,
         orderBy: String? = null,
         sort: String? = null,
+        genres: String? = null,
     ): JikanResponse {
         val key = buildKey(
             "search",
             "q" to query, "page" to page, "limit" to limit,
             "type" to type, "status" to status, "orderBy" to orderBy, "sort" to sort,
+            "genres" to genres,
         )
         return getOrFetch(key, SEARCH_TTL) {
-            jikanClient.searchAnime(query, page, limit, type, status, orderBy, sort)
+            jikanClient.searchAnime(query, page, limit, type, status, orderBy, sort, genres)
         }
     }
 
