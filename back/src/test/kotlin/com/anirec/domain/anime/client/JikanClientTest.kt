@@ -88,7 +88,7 @@ class JikanClientTest {
                 .addHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
         )
 
-        val result = jikanClient.searchAnime(query = "bebop", page = 1, limit = 10, type = "tv")
+        val result = jikanClient.searchAnime(page = 1, limit = 10, type = "tv", status = "complete", producers = "569")
 
         assertEquals(1, result.data.size)
         val anime = result.data[0]
@@ -106,10 +106,11 @@ class JikanClientTest {
         assertEquals("GET", request.method)
         val path = request.path!!
         assertTrue(path.startsWith("/anime?"))
-        assertTrue(path.contains("q=bebop"))
         assertTrue(path.contains("page=1"))
         assertTrue(path.contains("limit=10"))
         assertTrue(path.contains("type=tv"))
+        assertTrue(path.contains("status=complete"))
+        assertTrue(path.contains("producers=569"))
     }
 
     @Test
@@ -120,15 +121,16 @@ class JikanClientTest {
                 .addHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
         )
 
-        jikanClient.searchAnime(query = "bebop")
+        jikanClient.searchAnime(status = "airing")
 
         val request = mockWebServer.takeRequest()
         val path = request.path!!
-        assertTrue(path.contains("q=bebop"))
+        assertTrue(path.contains("status=airing"))
+        assertTrue(!path.contains("q="))
         assertTrue(!path.contains("page="))
         assertTrue(!path.contains("limit="))
         assertTrue(!path.contains("type="))
-        assertTrue(!path.contains("status="))
+        assertTrue(!path.contains("producers="))
     }
 
     @Test
@@ -169,6 +171,60 @@ class JikanClientTest {
         val path = request.path!!
         assertTrue(path.startsWith("/seasons/2024/winter"))
         assertTrue(path.contains("page=1"))
+    }
+
+    private val producerResponse = """
+        {
+          "pagination": {
+            "last_visible_page": 1,
+            "has_next_page": false,
+            "current_page": 1,
+            "items": { "count": 2, "total": 2, "per_page": 10 }
+          },
+          "data": [
+            {
+              "mal_id": 569,
+              "titles": [
+                { "type": "Default", "title": "MAPPA" }
+              ],
+              "count": 150
+            },
+            {
+              "mal_id": 11,
+              "titles": [
+                { "type": "Default", "title": "Madhouse" },
+                { "type": "Japanese", "title": "マッドハウス" }
+              ],
+              "count": 350
+            }
+          ]
+        }
+    """.trimIndent()
+
+    @Test
+    fun `searchProducers calls GET producers with query params`() = runTest {
+        mockWebServer.enqueue(
+            MockResponse()
+                .setBody(producerResponse)
+                .addHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+        )
+
+        val result = jikanClient.searchProducers(q = "mappa", page = 1, limit = 10)
+
+        assertEquals(2, result.data.size)
+        assertEquals(569L, result.data[0].malId)
+        assertEquals("MAPPA", result.data[0].titles?.first()?.title)
+        assertEquals(11L, result.data[1].malId)
+
+        val request = mockWebServer.takeRequest()
+        assertEquals("GET", request.method)
+        val path = request.path!!
+        assertTrue(path.startsWith("/producers?"))
+        assertTrue(path.contains("q=mappa"))
+        assertTrue(path.contains("page=1"))
+        assertTrue(path.contains("limit=10"))
+        assertTrue(path.contains("order_by=count"))
+        assertTrue(path.contains("sort=desc"))
     }
 
     @Test

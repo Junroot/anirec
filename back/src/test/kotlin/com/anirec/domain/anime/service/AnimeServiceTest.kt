@@ -54,14 +54,14 @@ class AnimeServiceTest {
 
         @Test
         fun `search delegates to AnimeCacheService`() = runTest {
-            coEvery { animeCacheService.searchAnime(query = "bebop", page = 1) } returns sampleResponse
+            coEvery { animeCacheService.searchAnime(status = "airing", page = 1) } returns sampleResponse
 
-            val result = service.search(query = "bebop", page = 1)
+            val result = service.search(status = "airing", page = 1)
 
             assertEquals(1, result.data.size)
             assertEquals("Cowboy Bebop", result.data[0].title)
-            coVerify(exactly = 1) { animeCacheService.searchAnime(query = "bebop", page = 1) }
-            coVerify(exactly = 0) { jikanClient.searchAnime(any(), any(), any(), any(), any(), any(), any(), any()) }
+            coVerify(exactly = 1) { animeCacheService.searchAnime(status = "airing", page = 1) }
+            coVerify(exactly = 0) { jikanClient.searchAnime(any(), any(), any(), any(), any(), any(), any(), any(), any()) }
         }
 
         @Test
@@ -104,13 +104,13 @@ class AnimeServiceTest {
 
         @Test
         fun `search falls back to JikanClient`() = runTest {
-            coEvery { jikanClient.searchAnime(query = "bebop", page = 1) } returns sampleResponse
+            coEvery { jikanClient.searchAnime(status = "airing", page = 1) } returns sampleResponse
 
-            val result = service.search(query = "bebop", page = 1)
+            val result = service.search(status = "airing", page = 1)
 
             assertEquals(1, result.data.size)
             assertEquals("Cowboy Bebop", result.data[0].title)
-            coVerify(exactly = 1) { jikanClient.searchAnime(query = "bebop", page = 1) }
+            coVerify(exactly = 1) { jikanClient.searchAnime(status = "airing", page = 1) }
         }
 
         @Test

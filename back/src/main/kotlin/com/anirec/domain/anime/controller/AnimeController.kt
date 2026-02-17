@@ -1,6 +1,7 @@
 package com.anirec.domain.anime.controller
 
 import com.anirec.domain.anime.dto.JikanResponse
+import com.anirec.domain.anime.dto.ProducerSimple
 import com.anirec.domain.anime.service.AnimeService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -13,15 +14,16 @@ class AnimeController(private val animeService: AnimeService) {
 
     @GetMapping
     suspend fun search(
-        @RequestParam(required = false) q: String?,
         @RequestParam(required = false) type: String?,
+        @RequestParam(required = false) status: String?,
         @RequestParam(required = false) genres: String?,
+        @RequestParam(required = false) producers: String?,
         @RequestParam(required = false) orderBy: String?,
         @RequestParam(required = false) sort: String?,
         @RequestParam(required = false) page: Int?,
         @RequestParam(required = false) limit: Int?,
     ): JikanResponse =
-        animeService.search(query = q, page = page, limit = limit, type = type, genres = genres, orderBy = orderBy, sort = sort)
+        animeService.search(page = page, limit = limit, type = type, status = status, genres = genres, orderBy = orderBy, sort = sort, producers = producers)
 
     @GetMapping("/top")
     suspend fun getTop(
@@ -45,4 +47,12 @@ class AnimeController(private val animeService: AnimeService) {
         @RequestParam(required = false) limit: Int?,
     ): JikanResponse =
         animeService.getCurrentSeason(page = page, limit = limit)
+
+    @GetMapping("/producers")
+    suspend fun searchProducers(
+        @RequestParam(required = false) q: String?,
+        @RequestParam(required = false) page: Int?,
+        @RequestParam(required = false, defaultValue = "10") limit: Int,
+    ): List<ProducerSimple> =
+        animeService.searchProducers(q = q, page = page, limit = limit)
 }

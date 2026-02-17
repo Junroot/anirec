@@ -1,5 +1,6 @@
 package com.anirec.domain.anime.client
 
+import com.anirec.domain.anime.dto.JikanProducerResponse
 import com.anirec.domain.anime.dto.JikanResponse
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.stereotype.Component
@@ -18,6 +19,7 @@ class JikanClient(private val jikanWebClient: WebClient) {
         orderBy: String? = null,
         sort: String? = null,
         genres: String? = null,
+        producers: String? = null,
     ): JikanResponse =
         jikanWebClient.get()
             .uri { builder ->
@@ -30,6 +32,8 @@ class JikanClient(private val jikanWebClient: WebClient) {
                     .queryParamIfPresent("order_by", orderBy)
                     .queryParamIfPresent("sort", sort)
                     .queryParamIfPresent("genres", genres)
+                    .queryParamIfPresent("producers", producers)
+					.queryParam("sfw", true)
                     .build()
             }
             .retrieve()
@@ -47,6 +51,7 @@ class JikanClient(private val jikanWebClient: WebClient) {
                     .queryParamIfPresent("page", page)
                     .queryParamIfPresent("limit", limit)
                     .queryParamIfPresent("filter", filter)
+					.queryParam("sfw", true)
                     .build()
             }
             .retrieve()
@@ -64,6 +69,7 @@ class JikanClient(private val jikanWebClient: WebClient) {
                 builder.path("/seasons/{year}/{season}")
                     .queryParamIfPresent("page", page)
                     .queryParamIfPresent("limit", limit)
+					.queryParam("sfw", true)
                     .build(year, season)
             }
             .retrieve()
@@ -83,6 +89,25 @@ class JikanClient(private val jikanWebClient: WebClient) {
             }
             .retrieve()
             .bodyToMono(JikanResponse::class.java)
+            .awaitSingle()
+
+    suspend fun searchProducers(
+        q: String? = null,
+        page: Int? = null,
+        limit: Int? = null,
+    ): JikanProducerResponse =
+        jikanWebClient.get()
+            .uri { builder ->
+                builder.path("/producers")
+                    .queryParamIfPresent("q", q)
+                    .queryParamIfPresent("page", page)
+                    .queryParamIfPresent("limit", limit)
+                    .queryParam("order_by", "count")
+                    .queryParam("sort", "desc")
+                    .build()
+            }
+            .retrieve()
+            .bodyToMono(JikanProducerResponse::class.java)
             .awaitSingle()
 
     private fun UriBuilder.queryParamIfPresent(name: String, value: Any?): UriBuilder =

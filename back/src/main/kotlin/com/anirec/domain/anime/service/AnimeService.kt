@@ -2,6 +2,7 @@ package com.anirec.domain.anime.service
 
 import com.anirec.domain.anime.client.JikanClient
 import com.anirec.domain.anime.dto.JikanResponse
+import com.anirec.domain.anime.dto.ProducerSimple
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -12,16 +13,17 @@ class AnimeService(
 ) {
 
     suspend fun search(
-        query: String? = null,
         page: Int? = null,
         limit: Int? = null,
         type: String? = null,
+        status: String? = null,
         genres: String? = null,
         orderBy: String? = null,
         sort: String? = null,
+        producers: String? = null,
     ): JikanResponse =
-        animeCacheService?.searchAnime(query, page, limit, type, orderBy = orderBy, sort = sort, genres = genres)
-            ?: jikanClient.searchAnime(query, page, limit, type, orderBy = orderBy, sort = sort, genres = genres)
+        animeCacheService?.searchAnime(page = page, limit = limit, type = type, status = status, orderBy = orderBy, sort = sort, genres = genres, producers = producers)
+            ?: jikanClient.searchAnime(page = page, limit = limit, type = type, status = status, orderBy = orderBy, sort = sort, genres = genres, producers = producers)
 
     suspend fun getTop(
         page: Int? = null,
@@ -45,4 +47,20 @@ class AnimeService(
     ): JikanResponse =
         animeCacheService?.getCurrentSeasonAnime(page, limit)
             ?: jikanClient.getCurrentSeasonAnime(page, limit)
+
+    suspend fun searchProducers(
+        q: String? = null,
+        page: Int? = null,
+        limit: Int? = null,
+    ): List<ProducerSimple> =
+        jikanClient.searchProducers(q = q, page = page, limit = limit)
+            .data
+            .map { dto ->
+                val name = dto.titles
+                    ?.firstOrNull { it.type == "Default" }
+                    ?.title
+                    ?: dto.titles?.firstOrNull()?.title
+                    ?: "Unknown"
+                ProducerSimple(id = dto.malId, name = name)
+            }
 }

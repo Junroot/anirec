@@ -3,16 +3,18 @@ import { SORT_PARAM_MAP } from '@/data/constants';
 import type { SearchParams } from '@/api/animeApi';
 
 export interface FilterState {
-  search: string;
   genre: string;
   format: string;
+  status: string;
+  producer: string;
   sort: string;
 }
 
 const defaultFilters: FilterState = {
-  search: '',
   genre: '',
   format: '',
+  status: '',
+  producer: '',
   sort: 'score-desc',
 };
 
@@ -28,9 +30,10 @@ export function useFilterState() {
   const buildSearchParams = (page: number): SearchParams => {
     const sortMapping = SORT_PARAM_MAP[filters.sort];
     return {
-      q: filters.search || undefined,
       genres: filters.genre || undefined,
       type: filters.format || undefined,
+      status: filters.status || undefined,
+      producers: filters.producer || undefined,
       orderBy: sortMapping?.orderBy,
       sort: sortMapping?.sort,
       page,

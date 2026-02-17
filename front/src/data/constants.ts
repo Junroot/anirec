@@ -43,6 +43,12 @@ export const SORT_PARAM_MAP: Record<string, { orderBy: string; sort: string }> =
   'newest': { orderBy: 'start_date', sort: 'desc' },
 };
 
+export const STATUSES: { value: string; label: string }[] = [
+  { value: 'airing', label: 'Airing' },
+  { value: 'complete', label: 'Complete' },
+  { value: 'upcoming', label: 'Upcoming' },
+];
+
 export const WATCH_STATUSES = [
   'Watching', 'Completed', 'Plan to Watch', 'Dropped', 'On Hold',
 ] as const;
