@@ -39,10 +39,11 @@ npm run preview   # 프로덕션 빌드 미리보기
 **`front/src/` 주요 디렉토리:**
 - `pages/` — 라우트 단위 페이지 컴포넌트
 - `components/` — 도메인별 구성: `ui/`, `layout/`, `anime/`, `auth/`, `filters/`, `home/`, `rating/`, `recommendation/`, `stats/`
-- `types/` — Jikan API 형태에 맞춘 TypeScript 인터페이스 (예: `Anime` 타입은 `mal_id`, `images.jpg.large_image_url` 사용)
-- `data/` — 목 데이터 파일 및 상수 (실제 API 호출 없음)
+- `types/` — TypeScript 인터페이스 (`anime.ts`: Jikan API 형태, `api.ts`: 페이지네이션/API 응답 제네릭 타입)
+- `api/` — 백엔드 API 클라이언트 (`client.ts`: 공통 fetch 래퍼 + `ApiError`, `animeApi.ts`: anime 엔드포인트 함수 4개)
+- `data/` — 목 데이터 파일 및 상수
 - `context/` — React 컨텍스트 (localStorage 기반 목 인증의 AuthContext)
-- `hooks/` — 커스텀 훅 (`useAuth`, `useLocalStorage`, `useFilterState`)
+- `hooks/` — 커스텀 훅 (`useAuth`, `useLocalStorage`, `useFilterState`, `useAnimeSearch`, `useTopAnime`, `useSeasonalAnime`)
 
 **라우팅 (`router.tsx`):**
 - `/` — 홈 (공개)
@@ -104,4 +105,4 @@ docker compose up -d    # MySQL 8 + Redis 7 로컬 인프라 기동
 
 ## 현재 상태
 
-프론트엔드는 목 데이터로 완전히 구성된 상태이며, 실제 API 연동은 아직 없습니다. 인증은 localStorage를 통한 가짜 구현입니다. 모든 애니메이션 데이터는 `data/mockAnime.ts`에서 제공됩니다. MD3 디자인 토큰이 `index.css`의 `@theme`에 정의 완료되었고 UI/레이아웃 공통 컴포넌트(Navbar, Footer, Button, Modal, Badge 등)는 MD3 토큰으로 마이그레이션됨. 나머지 컴포넌트(~30개 파일)는 아직 이전 토큰명을 참조하므로 후속 마이그레이션 필요. 백엔드는 인증 모듈(`domain/auth/`)과 Jikan API 클라이언트 + Redis 캐싱 레이어(`domain/anime/`)가 구현된 상태입니다. `domain/rating/`, `domain/recommendation/`은 아직 미구현입니다. 다음 주요 단계는 나머지 컴포넌트 MD3 토큰 마이그레이션, 애니메이션 REST API 컨트롤러 구현, 프론트엔드-백엔드 연동입니다.
+프론트엔드는 API 클라이언트 모듈(`api/client.ts`, `api/animeApi.ts`)과 데이터 페칭 훅(`useAnimeSearch`, `useTopAnime`, `useSeasonalAnime`)이 구현된 상태입니다. 단, 페이지 컴포넌트에서는 아직 목 데이터(`data/mockAnime.ts`)를 사용 중이며, 훅으로의 전환은 미완료입니다. 인증은 localStorage를 통한 가짜 구현입니다. 환경변수 `VITE_API_BASE_URL`(`.env.development`)로 백엔드 URL을 설정합니다. MD3 디자인 토큰이 `index.css`의 `@theme`에 정의 완료되었고 UI/레이아웃 공통 컴포넌트(Navbar, Footer, Button, Modal, Badge 등)는 MD3 토큰으로 마이그레이션됨. 나머지 컴포넌트(~30개 파일)는 아직 이전 토큰명을 참조하므로 후속 마이그레이션 필요. 백엔드는 인증 모듈(`domain/auth/`), Jikan API 클라이언트 + Redis 캐싱 레이어, 그리고 Anime REST API(`GET /api/anime`, `/api/anime/top`, `/api/anime/season`, `/api/anime/season/now`)가 구현된 상태입니다. `domain/rating/`, `domain/recommendation/`은 아직 미구현입니다. 다음 주요 단계는 나머지 컴포넌트 MD3 토큰 마이그레이션, 페이지 컴포넌트에서 목 데이터를 API 훅으로 교체하는 프론트엔드-백엔드 연동입니다.
