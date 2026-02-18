@@ -8,4 +8,6 @@ interface GenreRepository : JpaRepository<Genre, Long> {
     fun findAllByOrderByCountDesc(): List<Genre>
 
     fun findByNameContainingIgnoreCaseOrderByCountDesc(name: String): List<Genre>
+
+    fun findByMalIdIn(malIds: List<Long>): List<Genre>
 }

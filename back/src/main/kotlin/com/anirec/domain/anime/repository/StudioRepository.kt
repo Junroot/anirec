@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 interface StudioRepository : JpaRepository<Studio, Long> {
 
     fun findByNameContainingIgnoreCase(name: String): List<Studio>
+
+    fun findByMalIdIn(malIds: List<Long>): List<Studio>
 }
