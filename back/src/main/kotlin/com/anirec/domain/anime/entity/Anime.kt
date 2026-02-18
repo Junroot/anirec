@@ -39,6 +39,7 @@ class Anime(
 
     val score: Double? = null,
     val scoredBy: Long? = null,
+    @Column(name = "`rank`")
     val rank: Int? = null,
     val popularity: Int? = null,
     val members: Long? = null,
