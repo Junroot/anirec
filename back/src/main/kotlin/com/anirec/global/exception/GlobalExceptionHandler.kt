@@ -22,6 +22,12 @@ class GlobalExceptionHandler {
             .status(HttpStatus.FORBIDDEN)
             .body(ErrorResponse(status = 403, message = ex.message ?: "Forbidden"))
 
+    @ExceptionHandler(SyncAlreadyRunningException::class)
+    fun handleSyncAlreadyRunning(ex: SyncAlreadyRunningException): ResponseEntity<ErrorResponse> =
+        ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(ErrorResponse(status = 409, message = ex.message ?: "Sync is already running"))
+
     @ExceptionHandler(Exception::class)
     fun handleGeneral(ex: Exception): ResponseEntity<ErrorResponse> =
         ResponseEntity

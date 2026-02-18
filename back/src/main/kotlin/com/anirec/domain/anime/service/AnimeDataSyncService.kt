@@ -4,6 +4,7 @@ import com.anirec.domain.anime.client.JikanClient
 import com.anirec.domain.anime.dto.AnimeDto
 import com.anirec.domain.anime.dto.JikanResponse
 import com.anirec.domain.anime.entity.Studio
+import com.anirec.domain.anime.entity.SyncProgress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -26,6 +27,9 @@ class AnimeDataSyncService(
         private const val MAX_BACKOFF_MS = 30_000L
         private const val PAGE_DELAY_MS = 334L
     }
+
+    fun getSyncProgress(): SyncProgress? =
+        persistService.findSyncProgress(TASK_NAME)
 
     suspend fun syncGenres() {
         log.info("[AnimeSync] Starting genre sync")
