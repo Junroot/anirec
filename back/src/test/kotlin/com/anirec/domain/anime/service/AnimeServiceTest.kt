@@ -1,231 +1,314 @@
 package com.anirec.domain.anime.service
 
-import com.anirec.domain.anime.client.JikanClient
-import com.anirec.domain.anime.dto.*
-import io.mockk.coEvery
-import io.mockk.coVerify
+import com.anirec.domain.anime.entity.Anime
+import com.anirec.domain.anime.entity.Genre
+import com.anirec.domain.anime.entity.Studio
+import com.anirec.domain.anime.repository.AnimeRepository
+import com.anirec.domain.anime.repository.GenreRepository
+import com.anirec.domain.anime.repository.StudioRepository
+import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.test.runTest
+import io.mockk.verify
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class AnimeServiceTest {
 
-    private val jikanClient: JikanClient = mockk()
-    private val animeCacheService: AnimeCacheService = mockk()
+    private val animeRepository: AnimeRepository = mockk()
+    private val genreRepository: GenreRepository = mockk()
+    private val studioRepository: StudioRepository = mockk()
 
-    private val sampleResponse = JikanResponse(
-        pagination = JikanResponse.Pagination(
-            lastVisiblePage = 1,
-            hasNextPage = false,
-            currentPage = 1,
-            items = JikanResponse.PaginationItems(count = 1, total = 1, perPage = 25),
-        ),
-        data = listOf(
-            AnimeDto(
-                malId = 1,
-                title = "Cowboy Bebop",
-                titleJapanese = "カウボーイビバップ",
-                synopsis = "A space bounty hunter crew.",
-                score = 8.78,
-                scoredBy = 900000,
-                rank = 28,
-                popularity = 39,
-                members = 1800000,
-                episodes = 26,
-                status = "Finished Airing",
-                type = "TV",
-                season = "spring",
-                year = 1998,
-                genres = listOf(AnimeDto.MalEntity(1, "Action")),
-                studios = listOf(AnimeDto.MalEntity(14, "Sunrise")),
-                images = AnimeDto.Images(AnimeDto.Images.JpgImage("url", "large_url")),
-                aired = AnimeDto.Aired("1998-04-03", "1999-04-24"),
-                url = "https://myanimelist.net/anime/1/Cowboy_Bebop",
-            )
-        ),
-    )
+    private val service = AnimeService(animeRepository, genreRepository, studioRepository)
 
-    private val sampleGenreResponse = JikanGenreResponse(
-        data = listOf(
-            GenreDto(malId = 1, name = "Action", count = 5439),
-            GenreDto(malId = 4, name = "Comedy", count = 7000),
-            GenreDto(malId = 8, name = "Drama", count = 3000),
-        ),
-    )
+    private val actionGenre = Genre(malId = 1, name = "Action", count = 5439, id = 1)
+    private val comedyGenre = Genre(malId = 4, name = "Comedy", count = 7000, id = 2)
+    private val dramaGenre = Genre(malId = 8, name = "Drama", count = 3000, id = 3)
 
-    private val sampleProducerResponse = JikanProducerResponse(
-        pagination = JikanResponse.Pagination(
-            lastVisiblePage = 1,
-            hasNextPage = false,
-            currentPage = 1,
-            items = JikanResponse.PaginationItems(count = 1, total = 1, perPage = 10),
-        ),
-        data = listOf(
-            ProducerDto(
-                malId = 569,
-                titles = listOf(
-                    ProducerDto.ProducerTitle("Default", "MAPPA"),
-                    ProducerDto.ProducerTitle("Japanese", "MAPPA"),
-                ),
-                count = 150,
-            ),
-        ),
-    )
+    private val sunriseStudio = Studio(malId = 14, name = "Sunrise", id = 1)
+    private val mappaStudio = Studio(malId = 569, name = "MAPPA", id = 2)
+
+    private val sampleAnime = Anime(
+        malId = 1,
+        title = "Cowboy Bebop",
+        titleJapanese = "カウボーイビバップ",
+        synopsis = "A space bounty hunter crew.",
+        score = 8.78,
+        scoredBy = 900000,
+        rank = 28,
+        popularity = 39,
+        members = 1800000,
+        episodes = 26,
+        status = "Finished Airing",
+        type = "TV",
+        season = "spring",
+        year = 1998,
+        imageUrl = "url",
+        largeImageUrl = "large_url",
+        url = "https://myanimelist.net/anime/1/Cowboy_Bebop",
+        id = 1,
+    ).apply {
+        genres.add(actionGenre)
+        studios.add(sunriseStudio)
+    }
 
     @Nested
-    inner class WithCacheService {
-        private val service = AnimeService(jikanClient, animeCacheService)
+    inner class Search {
 
         @Test
-        fun `search delegates to AnimeCacheService`() = runTest {
-            coEvery { animeCacheService.searchAnime(status = "airing", page = 1) } returns sampleResponse
+        fun `search returns paginated results from repository`() {
+            val pageable = PageRequest.of(0, 25)
+            val page = PageImpl(listOf(sampleAnime), pageable, 1)
 
-            val result = service.search(status = "airing", page = 1)
+            every {
+                animeRepository.search(
+                    type = "TV",
+                    status = "airing",
+                    genreMalIds = null,
+                    producerMalIds = null,
+                    orderBy = null,
+                    sort = null,
+                    pageable = pageable,
+                )
+            } returns page
+
+            val result = service.search(page = 1, limit = 25, type = "TV", status = "airing")
 
             assertEquals(1, result.data.size)
             assertEquals("Cowboy Bebop", result.data[0].title)
-            coVerify(exactly = 1) { animeCacheService.searchAnime(status = "airing", page = 1) }
-            coVerify(exactly = 0) { jikanClient.searchAnime(any(), any(), any(), any(), any(), any(), any(), any(), any()) }
+            assertEquals(1, result.pagination?.currentPage)
+            assertEquals(false, result.pagination?.hasNextPage)
         }
 
         @Test
-        fun `getTop delegates to AnimeCacheService`() = runTest {
-            coEvery { animeCacheService.getTopAnime(page = 1, limit = 25) } returns sampleResponse
+        fun `search parses genres comma string to malId list`() {
+            val pageable = PageRequest.of(0, 25)
+            val page = PageImpl(listOf(sampleAnime), pageable, 1)
+
+            every {
+                animeRepository.search(
+                    type = null,
+                    status = null,
+                    genreMalIds = listOf(1L, 4L),
+                    producerMalIds = null,
+                    orderBy = null,
+                    sort = null,
+                    pageable = pageable,
+                )
+            } returns page
+
+            val result = service.search(page = 1, limit = 25, genres = "1,4")
+
+            assertEquals(1, result.data.size)
+            verify {
+                animeRepository.search(
+                    type = null,
+                    status = null,
+                    genreMalIds = listOf(1L, 4L),
+                    producerMalIds = null,
+                    orderBy = null,
+                    sort = null,
+                    pageable = pageable,
+                )
+            }
+        }
+
+        @Test
+        fun `search parses producers comma string to malId list`() {
+            val pageable = PageRequest.of(0, 25)
+            val page = PageImpl(listOf(sampleAnime), pageable, 1)
+
+            every {
+                animeRepository.search(
+                    type = null,
+                    status = null,
+                    genreMalIds = null,
+                    producerMalIds = listOf(14L, 569L),
+                    orderBy = null,
+                    sort = null,
+                    pageable = pageable,
+                )
+            } returns page
+
+            val result = service.search(page = 1, limit = 25, producers = "14,569")
+
+            assertEquals(1, result.data.size)
+        }
+
+        @Test
+        fun `search returns empty result`() {
+            val pageable = PageRequest.of(0, 25)
+            val page = PageImpl<Anime>(emptyList(), pageable, 0)
+
+            every {
+                animeRepository.search(
+                    type = null,
+                    status = null,
+                    genreMalIds = null,
+                    producerMalIds = null,
+                    orderBy = null,
+                    sort = null,
+                    pageable = pageable,
+                )
+            } returns page
+
+            val result = service.search(page = 1, limit = 25)
+
+            assertTrue(result.data.isEmpty())
+            assertEquals(0, result.pagination?.items?.total)
+        }
+    }
+
+    @Nested
+    inner class GetTop {
+
+        @Test
+        fun `getTop returns top anime from repository`() {
+            val pageable = PageRequest.of(0, 25)
+            val page = PageImpl(listOf(sampleAnime), pageable, 1)
+
+            every { animeRepository.findTop(pageable) } returns page
 
             val result = service.getTop(page = 1, limit = 25)
 
             assertEquals(1, result.data.size)
-            coVerify(exactly = 1) { animeCacheService.getTopAnime(page = 1, limit = 25) }
-            coVerify(exactly = 0) { jikanClient.getTopAnime(any(), any(), any()) }
+            assertEquals("Cowboy Bebop", result.data[0].title)
         }
 
         @Test
-        fun `getSeasonal delegates to AnimeCacheService`() = runTest {
-            coEvery { animeCacheService.getSeasonalAnime(2024, "winter", page = 1) } returns sampleResponse
+        fun `getTop returns empty result`() {
+            val pageable = PageRequest.of(0, 25)
+            val page = PageImpl<Anime>(emptyList(), pageable, 0)
 
-            val result = service.getSeasonal(year = 2024, season = "winter", page = 1)
+            every { animeRepository.findTop(pageable) } returns page
+
+            val result = service.getTop(page = 1, limit = 25)
+
+            assertTrue(result.data.isEmpty())
+        }
+    }
+
+    @Nested
+    inner class GetSeasonal {
+
+        @Test
+        fun `getSeasonal returns seasonal anime from repository`() {
+            val pageable = PageRequest.of(0, 25)
+            val page = PageImpl(listOf(sampleAnime), pageable, 1)
+
+            every { animeRepository.findBySeason(2024, "winter", pageable) } returns page
+
+            val result = service.getSeasonal(year = 2024, season = "winter", page = 1, limit = 25)
 
             assertEquals(1, result.data.size)
-            coVerify(exactly = 1) { animeCacheService.getSeasonalAnime(2024, "winter", page = 1) }
-            coVerify(exactly = 0) { jikanClient.getSeasonalAnime(any(), any(), any(), any()) }
+            assertEquals("Cowboy Bebop", result.data[0].title)
         }
+    }
+
+    @Nested
+    inner class GetCurrentSeason {
 
         @Test
-        fun `getCurrentSeason delegates to AnimeCacheService`() = runTest {
-            coEvery { animeCacheService.getCurrentSeasonAnime(page = 1) } returns sampleResponse
+        fun `getCurrentSeason delegates to getSeasonal with computed year and season`() {
+            val pageable = PageRequest.of(0, 25)
+            val page = PageImpl(listOf(sampleAnime), pageable, 1)
 
-            val result = service.getCurrentSeason(page = 1)
+            // We can't mock LocalDate.now() easily, but we can verify the repository is called
+            every { animeRepository.findBySeason(any(), any(), pageable) } returns page
+
+            val result = service.getCurrentSeason(page = 1, limit = 25)
 
             assertEquals(1, result.data.size)
-            coVerify(exactly = 1) { animeCacheService.getCurrentSeasonAnime(page = 1) }
-            coVerify(exactly = 0) { jikanClient.getCurrentSeasonAnime(any(), any()) }
+            verify { animeRepository.findBySeason(any(), any(), pageable) }
+        }
+    }
+
+    @Nested
+    inner class SearchGenres {
+
+        @Test
+        fun `searchGenres returns all genres when query is null`() {
+            every { genreRepository.findAllByOrderByCountDesc() } returns listOf(actionGenre, comedyGenre, dramaGenre)
+
+            val result = service.searchGenres(q = null)
+
+            assertEquals(3, result.size)
+            assertEquals(1L, result[0].id)
+            assertEquals("Action", result[0].name)
+            verify { genreRepository.findAllByOrderByCountDesc() }
         }
 
         @Test
-        fun `searchGenres delegates to AnimeCacheService and filters by query`() = runTest {
-            coEvery { animeCacheService.getAnimeGenres() } returns sampleGenreResponse
+        fun `searchGenres filters by query`() {
+            every { genreRepository.findByNameContainingIgnoreCaseOrderByCountDesc("act") } returns listOf(actionGenre)
 
             val result = service.searchGenres(q = "act")
 
             assertEquals(1, result.size)
             assertEquals(1L, result[0].id)
             assertEquals("Action", result[0].name)
-            coVerify(exactly = 1) { animeCacheService.getAnimeGenres() }
-            coVerify(exactly = 0) { jikanClient.getAnimeGenres() }
         }
 
         @Test
-        fun `searchGenres returns all when query is null`() = runTest {
-            coEvery { animeCacheService.getAnimeGenres() } returns sampleGenreResponse
+        fun `searchGenres returns all genres when query is blank`() {
+            every { genreRepository.findAllByOrderByCountDesc() } returns listOf(actionGenre, comedyGenre)
 
-            val result = service.searchGenres(q = null)
+            val result = service.searchGenres(q = "  ")
 
-            assertEquals(3, result.size)
-        }
-
-        @Test
-        fun `searchProducers delegates to AnimeCacheService`() = runTest {
-            coEvery { animeCacheService.searchProducers(q = "mappa", page = 1, limit = 10) } returns sampleProducerResponse
-
-            val result = service.searchProducers(q = "mappa", page = 1, limit = 10)
-
-            assertEquals(1, result.size)
-            assertEquals(569L, result[0].id)
-            assertEquals("MAPPA", result[0].name)
-            coVerify(exactly = 1) { animeCacheService.searchProducers(q = "mappa", page = 1, limit = 10) }
-            coVerify(exactly = 0) { jikanClient.searchProducers(any(), any(), any()) }
+            assertEquals(2, result.size)
+            verify { genreRepository.findAllByOrderByCountDesc() }
         }
     }
 
     @Nested
-    inner class WithoutCacheService {
-        private val service = AnimeService(jikanClient, null)
+    inner class SearchProducers {
 
         @Test
-        fun `search falls back to JikanClient`() = runTest {
-            coEvery { jikanClient.searchAnime(status = "airing", page = 1) } returns sampleResponse
+        fun `searchProducers returns matching studios`() {
+            every { studioRepository.findByNameContainingIgnoreCase("mappa") } returns listOf(mappaStudio)
 
-            val result = service.search(status = "airing", page = 1)
-
-            assertEquals(1, result.data.size)
-            assertEquals("Cowboy Bebop", result.data[0].title)
-            coVerify(exactly = 1) { jikanClient.searchAnime(status = "airing", page = 1) }
-        }
-
-        @Test
-        fun `getTop falls back to JikanClient`() = runTest {
-            coEvery { jikanClient.getTopAnime(page = 1, limit = 25) } returns sampleResponse
-
-            val result = service.getTop(page = 1, limit = 25)
-
-            assertEquals(1, result.data.size)
-            coVerify(exactly = 1) { jikanClient.getTopAnime(page = 1, limit = 25) }
-        }
-
-        @Test
-        fun `getSeasonal falls back to JikanClient`() = runTest {
-            coEvery { jikanClient.getSeasonalAnime(2024, "winter", page = 1) } returns sampleResponse
-
-            val result = service.getSeasonal(year = 2024, season = "winter", page = 1)
-
-            assertEquals(1, result.data.size)
-            coVerify(exactly = 1) { jikanClient.getSeasonalAnime(2024, "winter", page = 1) }
-        }
-
-        @Test
-        fun `getCurrentSeason falls back to JikanClient`() = runTest {
-            coEvery { jikanClient.getCurrentSeasonAnime(page = 1) } returns sampleResponse
-
-            val result = service.getCurrentSeason(page = 1)
-
-            assertEquals(1, result.data.size)
-            coVerify(exactly = 1) { jikanClient.getCurrentSeasonAnime(page = 1) }
-        }
-
-        @Test
-        fun `searchGenres falls back to JikanClient`() = runTest {
-            coEvery { jikanClient.getAnimeGenres() } returns sampleGenreResponse
-
-            val result = service.searchGenres(q = "drama")
-
-            assertEquals(1, result.size)
-            assertEquals(8L, result[0].id)
-            assertEquals("Drama", result[0].name)
-            coVerify(exactly = 1) { jikanClient.getAnimeGenres() }
-        }
-
-        @Test
-        fun `searchProducers falls back to JikanClient`() = runTest {
-            coEvery { jikanClient.searchProducers(q = "mappa", page = 1, limit = 10) } returns sampleProducerResponse
-
-            val result = service.searchProducers(q = "mappa", page = 1, limit = 10)
+            val result = service.searchProducers(q = "mappa", limit = 10)
 
             assertEquals(1, result.size)
             assertEquals(569L, result[0].id)
             assertEquals("MAPPA", result[0].name)
-            coVerify(exactly = 1) { jikanClient.searchProducers(q = "mappa", page = 1, limit = 10) }
+        }
+
+        @Test
+        fun `searchProducers returns empty list when query is null`() {
+            val result = service.searchProducers(q = null)
+
+            assertTrue(result.isEmpty())
+        }
+
+        @Test
+        fun `searchProducers returns empty list when query is blank`() {
+            val result = service.searchProducers(q = "  ")
+
+            assertTrue(result.isEmpty())
+        }
+
+        @Test
+        fun `searchProducers respects limit`() {
+            val studios = (1..20).map { Studio(malId = it.toLong(), name = "Studio $it", id = it.toLong()) }
+            every { studioRepository.findByNameContainingIgnoreCase("studio") } returns studios
+
+            val result = service.searchProducers(q = "studio", limit = 5)
+
+            assertEquals(5, result.size)
+        }
+
+        @Test
+        fun `searchProducers uses default limit of 10`() {
+            val studios = (1..20).map { Studio(malId = it.toLong(), name = "Studio $it", id = it.toLong()) }
+            every { studioRepository.findByNameContainingIgnoreCase("studio") } returns studios
+
+            val result = service.searchProducers(q = "studio")
+
+            assertEquals(10, result.size)
         }
     }
 }

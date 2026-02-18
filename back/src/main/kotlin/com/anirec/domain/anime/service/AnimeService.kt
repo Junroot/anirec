@@ -1,19 +1,23 @@
 package com.anirec.domain.anime.service
 
-import com.anirec.domain.anime.client.JikanClient
 import com.anirec.domain.anime.dto.GenreSimple
 import com.anirec.domain.anime.dto.JikanResponse
+import com.anirec.domain.anime.dto.PaginationUtils
 import com.anirec.domain.anime.dto.ProducerSimple
-import org.springframework.beans.factory.annotation.Autowired
+import com.anirec.domain.anime.repository.AnimeRepository
+import com.anirec.domain.anime.repository.GenreRepository
+import com.anirec.domain.anime.repository.StudioRepository
 import org.springframework.stereotype.Service
+import java.time.LocalDate
 
 @Service
 class AnimeService(
-    private val jikanClient: JikanClient,
-    @Autowired(required = false) private val animeCacheService: AnimeCacheService?,
+    private val animeRepository: AnimeRepository,
+    private val genreRepository: GenreRepository,
+    private val studioRepository: StudioRepository,
 ) {
 
-    suspend fun search(
+    fun search(
         page: Int? = null,
         limit: Int? = null,
         type: String? = null,
@@ -22,58 +26,77 @@ class AnimeService(
         orderBy: String? = null,
         sort: String? = null,
         producers: String? = null,
-    ): JikanResponse =
-        animeCacheService?.searchAnime(page = page, limit = limit, type = type, status = status, orderBy = orderBy, sort = sort, genres = genres, producers = producers)
-            ?: jikanClient.searchAnime(page = page, limit = limit, type = type, status = status, orderBy = orderBy, sort = sort, genres = genres, producers = producers)
+    ): JikanResponse {
+        val genreMalIds = genres?.split(",")?.mapNotNull { it.trim().toLongOrNull() }
+        val producerMalIds = producers?.split(",")?.mapNotNull { it.trim().toLongOrNull() }
+        val pageable = PaginationUtils.toPageable(page, limit)
 
-    suspend fun getTop(
+        val result = animeRepository.search(
+            type = type,
+            status = status,
+            genreMalIds = genreMalIds,
+            producerMalIds = producerMalIds,
+            orderBy = orderBy,
+            sort = sort,
+            pageable = pageable,
+        )
+        return PaginationUtils.toJikanResponse(result)
+    }
+
+    fun getTop(
         page: Int? = null,
         limit: Int? = null,
-    ): JikanResponse =
-        animeCacheService?.getTopAnime(page, limit)
-            ?: jikanClient.getTopAnime(page, limit)
+    ): JikanResponse {
+        val pageable = PaginationUtils.toPageable(page, limit)
+        val result = animeRepository.findTop(pageable)
+        return PaginationUtils.toJikanResponse(result)
+    }
 
-    suspend fun getSeasonal(
+    fun getSeasonal(
         year: Int,
         season: String,
         page: Int? = null,
         limit: Int? = null,
-    ): JikanResponse =
-        animeCacheService?.getSeasonalAnime(year, season, page, limit)
-            ?: jikanClient.getSeasonalAnime(year, season, page, limit)
-
-    suspend fun getCurrentSeason(
-        page: Int? = null,
-        limit: Int? = null,
-    ): JikanResponse =
-        animeCacheService?.getCurrentSeasonAnime(page, limit)
-            ?: jikanClient.getCurrentSeasonAnime(page, limit)
-
-    suspend fun searchGenres(
-        q: String? = null,
-    ): List<GenreSimple> {
-        val response = animeCacheService?.getAnimeGenres()
-            ?: jikanClient.getAnimeGenres()
-        return response.data
-            .filter { q == null || it.name.contains(q, ignoreCase = true) }
-            .map { GenreSimple(id = it.malId, name = it.name) }
+    ): JikanResponse {
+        val pageable = PaginationUtils.toPageable(page, limit)
+        val result = animeRepository.findBySeason(year, season, pageable)
+        return PaginationUtils.toJikanResponse(result)
     }
 
-    suspend fun searchProducers(
+    fun getCurrentSeason(
+        page: Int? = null,
+        limit: Int? = null,
+    ): JikanResponse {
+        val now = LocalDate.now()
+        val year = now.year
+        val season = when (now.monthValue) {
+            in 1..3 -> "winter"
+            in 4..6 -> "spring"
+            in 7..9 -> "summer"
+            else -> "fall"
+        }
+        return getSeasonal(year = year, season = season, page = page, limit = limit)
+    }
+
+    fun searchGenres(
+        q: String? = null,
+    ): List<GenreSimple> {
+        val genres = if (q.isNullOrBlank()) {
+            genreRepository.findAllByOrderByCountDesc()
+        } else {
+            genreRepository.findByNameContainingIgnoreCaseOrderByCountDesc(q)
+        }
+        return genres.map { GenreSimple(id = it.malId, name = it.name) }
+    }
+
+    fun searchProducers(
         q: String? = null,
         page: Int? = null,
         limit: Int? = null,
     ): List<ProducerSimple> {
-        val response = animeCacheService?.searchProducers(q = q, page = page, limit = limit)
-            ?: jikanClient.searchProducers(q = q, page = page, limit = limit)
-        return response.data
-            .map { dto ->
-                val name = dto.titles
-                    ?.firstOrNull { it.type == "Default" }
-                    ?.title
-                    ?: dto.titles?.firstOrNull()?.title
-                    ?: "Unknown"
-                ProducerSimple(id = dto.malId, name = name)
-            }
+        if (q.isNullOrBlank()) return emptyList()
+        val studios = studioRepository.findByNameContainingIgnoreCase(q)
+        val effectiveLimit = limit ?: 10
+        return studios.take(effectiveLimit).map { ProducerSimple(id = it.malId, name = it.name) }
     }
 }
