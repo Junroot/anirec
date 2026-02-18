@@ -220,4 +220,92 @@ class AnimeDataSyncServiceTest {
             }
         }
     }
+
+    @Nested
+    inner class SyncCurrentSeason {
+
+        private fun setupCommonMocks() {
+            every { persistService.saveSyncProgress(any(), any(), any(), any(), any(), any(), any()) } answers {
+                SyncProgress(taskName = arg(1), status = arg(2), id = 1)
+            }
+            every { persistService.findAllGenres() } returns listOf(Genre(malId = 1, name = "Action", id = 10))
+            every { persistService.findAllStudios() } returns listOf(Studio(malId = 14, name = "Sunrise", id = 20))
+            every { persistService.saveNewStudios(any()) } answers { firstArg() }
+            every { persistService.upsertAnimeBatch(any(), any(), any()) } just runs
+        }
+
+        @Test
+        fun `processes single page and completes`() = runTest {
+            every { persistService.findSyncProgress("anime-season-sync") } returns null
+            setupCommonMocks()
+
+            coEvery { jikanClient.getCurrentSeasonAnime(page = 1, limit = 25) } returns
+                sampleJikanResponse(listOf(sampleAnimeDto(1, "Season Anime 1")), hasNextPage = false)
+
+            service.syncCurrentSeason()
+
+            verify(atLeast = 1) { persistService.upsertAnimeBatch(any(), any(), any()) }
+            verify {
+                persistService.saveSyncProgress(any(), "anime-season-sync", "COMPLETED", any(), any(), any(), any())
+            }
+        }
+
+        @Test
+        fun `processes multiple pages with pagination`() = runTest {
+            every { persistService.findSyncProgress("anime-season-sync") } returns null
+            setupCommonMocks()
+
+            coEvery { jikanClient.getCurrentSeasonAnime(page = 1, limit = 25) } returns
+                sampleJikanResponse(
+                    listOf(sampleAnimeDto(1, "Season Anime 1")),
+                    currentPage = 1, lastPage = 2, hasNextPage = true,
+                )
+            coEvery { jikanClient.getCurrentSeasonAnime(page = 2, limit = 25) } returns
+                sampleJikanResponse(
+                    listOf(sampleAnimeDto(2, "Season Anime 2")),
+                    currentPage = 2, lastPage = 2, hasNextPage = false,
+                )
+
+            service.syncCurrentSeason()
+
+            coVerify { jikanClient.getCurrentSeasonAnime(page = 1, limit = 25) }
+            coVerify { jikanClient.getCurrentSeasonAnime(page = 2, limit = 25) }
+            verify(exactly = 2) { persistService.upsertAnimeBatch(any(), any(), any()) }
+        }
+
+        @Test
+        fun `skips when already running`() = runTest {
+            every { persistService.findSyncProgress("anime-season-sync") } returns
+                SyncProgress(taskName = "anime-season-sync", status = "RUNNING", id = 1)
+
+            service.syncCurrentSeason()
+
+            coVerify(exactly = 0) { jikanClient.getCurrentSeasonAnime(any(), any()) }
+        }
+
+        @Test
+        fun `continues to next page on error`() = runTest {
+            every { persistService.findSyncProgress("anime-season-sync") } returns null
+            setupCommonMocks()
+
+            coEvery { jikanClient.getCurrentSeasonAnime(page = 1, limit = 25) } throws
+                RuntimeException("Network error")
+            // After an error, hasNextPage defaults to false so the loop ends.
+            // To test continuation, we need the error page to not be the last page.
+            // But since we don't know hasNextPage on error, the loop increments currentPage
+            // and hasNextPage remains true only if it was set before. Actually on first page,
+            // hasNextPage starts as true, so after error it stays true and continues to page 2.
+
+            coEvery { jikanClient.getCurrentSeasonAnime(page = 2, limit = 25) } returns
+                sampleJikanResponse(listOf(sampleAnimeDto(2, "Season Anime 2")), currentPage = 2, lastPage = 2, hasNextPage = false)
+
+            service.syncCurrentSeason()
+
+            coVerify { jikanClient.getCurrentSeasonAnime(page = 1, limit = 25) }
+            coVerify { jikanClient.getCurrentSeasonAnime(page = 2, limit = 25) }
+            verify {
+                persistService.saveSyncProgress(any(), "anime-season-sync", "COMPLETED", any(), any(), any(), any())
+            }
+        }
+    }
 }

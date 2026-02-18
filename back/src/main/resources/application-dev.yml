@@ -24,6 +24,8 @@ app:
     allowed-origins: http://localhost:5173
   jikan:
     base-url: "https://api.jikan.moe/v4"
+  sync:
+    enabled: true
 
 logging:
   level:

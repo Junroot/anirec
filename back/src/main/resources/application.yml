@@ -18,3 +18,7 @@ app:
     allowed-origins: ""
   jikan:
     base-url: "https://api.jikan.moe/v4"
+  sync:
+    enabled: false
+    season-cron: "0 0 */6 * * *"
+    full-cron: "0 0 3 ? * MON"

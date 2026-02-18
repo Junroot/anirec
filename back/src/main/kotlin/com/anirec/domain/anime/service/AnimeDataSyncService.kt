@@ -22,14 +22,15 @@ class AnimeDataSyncService(
 
     companion object {
         private const val TASK_NAME = "anime-full-sync"
+        private const val SEASON_TASK_NAME = "anime-season-sync"
         private const val MAX_RETRIES = 5
         private const val INITIAL_BACKOFF_MS = 1000L
         private const val MAX_BACKOFF_MS = 30_000L
         private const val PAGE_DELAY_MS = 334L
     }
 
-    fun getSyncProgress(): SyncProgress? =
-        persistService.findSyncProgress(TASK_NAME)
+    fun getSyncProgress(taskName: String = TASK_NAME): SyncProgress? =
+        persistService.findSyncProgress(taskName)
 
     suspend fun syncGenres() {
         log.info("[AnimeSync] Starting genre sync")
@@ -128,6 +129,118 @@ class AnimeDataSyncService(
             log.warn("[AnimeSync] Completed with {} failed pages: {}", failedPages.size, failedPages)
         } else {
             log.info("[AnimeSync] Completed successfully. Total pages: {}", currentPage - 1)
+        }
+    }
+
+    suspend fun syncCurrentSeason() {
+        val progress = withContext(Dispatchers.IO) { persistService.findSyncProgress(SEASON_TASK_NAME) }
+
+        if (progress != null && progress.status == "RUNNING") {
+            log.warn("[SeasonSync] Season sync already running. Skipping.")
+            return
+        }
+
+        log.info("[SeasonSync] Starting current season sync")
+        val startTime = LocalDateTime.now()
+
+        withContext(Dispatchers.IO) {
+            persistService.saveSyncProgress(
+                existing = progress,
+                taskName = SEASON_TASK_NAME,
+                status = "RUNNING",
+                lastProcessedPage = 0,
+                startedAt = startTime,
+            )
+        }
+
+        val genreLookup = withContext(Dispatchers.IO) {
+            persistService.findAllGenres().associateBy({ it.malId }, { it }).toMutableMap()
+        }
+        val studioLookup = withContext(Dispatchers.IO) {
+            persistService.findAllStudios().associateBy({ it.malId }, { it }).toMutableMap()
+        }
+
+        var currentPage = 1
+        var hasNextPage = true
+        var totalProcessed = 0
+        var errorCount = 0
+
+        while (hasNextPage) {
+            try {
+                val response = fetchSeasonPageWithBackoff(currentPage)
+
+                val newStudios = extractNewStudios(response.data, studioLookup)
+                if (newStudios.isNotEmpty()) {
+                    val saved = withContext(Dispatchers.IO) { persistService.saveNewStudios(newStudios) }
+                    saved.forEach { studioLookup[it.malId] = it }
+                    log.info("[SeasonSync] Saved {} new studios", newStudios.size)
+                }
+
+                withContext(Dispatchers.IO) {
+                    persistService.upsertAnimeBatch(response.data, genreLookup, studioLookup)
+                }
+                totalProcessed += response.data.size
+
+                withContext(Dispatchers.IO) {
+                    persistService.saveSyncProgress(
+                        existing = persistService.findSyncProgress(SEASON_TASK_NAME),
+                        taskName = SEASON_TASK_NAME,
+                        status = "RUNNING",
+                        lastProcessedPage = currentPage,
+                        totalPages = response.pagination?.lastVisiblePage,
+                    )
+                }
+
+                val total = response.pagination?.lastVisiblePage ?: currentPage
+                log.info("[SeasonSync] Page {}/{} processed ({} anime)", currentPage, total, response.data.size)
+
+                hasNextPage = response.pagination?.hasNextPage ?: false
+                currentPage++
+
+                if (hasNextPage) {
+                    delay(PAGE_DELAY_MS)
+                }
+            } catch (e: Exception) {
+                log.error("[SeasonSync] Error on page {}: {}", currentPage, e.message)
+                errorCount++
+                currentPage++
+                delay(PAGE_DELAY_MS)
+            }
+        }
+
+        val endTime = LocalDateTime.now()
+        withContext(Dispatchers.IO) {
+            persistService.saveSyncProgress(
+                existing = persistService.findSyncProgress(SEASON_TASK_NAME),
+                taskName = SEASON_TASK_NAME,
+                status = "COMPLETED",
+                lastProcessedPage = currentPage - 1,
+                completedAt = endTime,
+            )
+        }
+
+        log.info(
+            "[SeasonSync] Completed. Total anime processed: {}, errors: {}, duration: {} -> {}",
+            totalProcessed, errorCount, startTime, endTime,
+        )
+    }
+
+    private suspend fun fetchSeasonPageWithBackoff(page: Int): JikanResponse {
+        var attempt = 0
+        var delayMs = INITIAL_BACKOFF_MS
+        while (true) {
+            try {
+                return jikanClient.getCurrentSeasonAnime(page = page, limit = 25)
+            } catch (e: WebClientResponseException) {
+                if (e.statusCode.value() == 429 && attempt < MAX_RETRIES) {
+                    log.warn("[SeasonSync] 429 Rate limited on page {}. Retry {} after {}ms", page, attempt + 1, delayMs)
+                    delay(delayMs)
+                    delayMs = (delayMs * 2).coerceAtMost(MAX_BACKOFF_MS)
+                    attempt++
+                } else {
+                    throw e
+                }
+            }
         }
     }
 
