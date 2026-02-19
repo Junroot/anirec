@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { RecommendationSection } from '@/components/recommendation/RecommendationSection';
-import { RatingModal } from '@/components/rating/RatingModal';
+import { RatingModal, animeToRatingTarget } from '@/components/rating/RatingModal';
+import type { RatingTarget } from '@/components/rating/RatingModal';
 import { mockAnime } from '@/data/mockAnime';
 import { mockRecommendations, mockTasteGroup } from '@/data/mockRecommendations';
 import { upsertRating } from '@/api/ratingApi';
@@ -9,7 +10,7 @@ import type { Recommendation } from '@/types/recommendation';
 import type { WatchStatus } from '@/types/rating';
 
 export function RecommendPage() {
-  const [ratingAnime, setRatingAnime] = useState<Anime | null>(null);
+  const [ratingTarget, setRatingTarget] = useState<RatingTarget | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [recommendations, setRecommendations] = useState<Recommendation[]>(mockRecommendations);
 
@@ -21,12 +22,12 @@ export function RecommendPage() {
     );
   };
 
-  const handleRate = (anime: Anime) => setRatingAnime(anime);
+  const handleRate = (anime: Anime) => setRatingTarget(animeToRatingTarget(anime));
   const handleRatingSubmit = async (animeId: number, score: number, status: WatchStatus) => {
     setSubmitting(true);
     try {
       await upsertRating(animeId, score, status);
-      setRatingAnime(null);
+      setRatingTarget(null);
     } catch {
       // API error — modal stays open so user can retry
     } finally {
@@ -45,9 +46,9 @@ export function RecommendPage() {
         onRate={handleRate}
       />
       <RatingModal
-        anime={ratingAnime}
-        isOpen={!!ratingAnime}
-        onClose={() => setRatingAnime(null)}
+        target={ratingTarget}
+        isOpen={!!ratingTarget}
+        onClose={() => setRatingTarget(null)}
         onSubmit={handleRatingSubmit}
         submitting={submitting}
       />

@@ -1,15 +1,26 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Star, Hash, BarChart3, Film, Trash2, AlertTriangle } from 'lucide-react';
-import { StatSummaryCard } from '@/components/stats/StatSummaryCard';
+import { Star, Trash2, Pencil, AlertTriangle } from 'lucide-react';
+import { RatingModal } from '@/components/rating/RatingModal';
+import type { RatingTarget } from '@/components/rating/RatingModal';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { getMyRatings, deleteRating } from '@/api/ratingApi';
+import { getMyRatings, deleteRating, upsertRating } from '@/api/ratingApi';
 import type { RatingWithAnimeResponse, WatchStatus } from '@/types/rating';
 import { WATCH_STATUSES, PLACEHOLDER_IMAGE } from '@/data/constants';
 
 type TabFilter = 'All' | WatchStatus;
+
+function ratingToTarget(r: RatingWithAnimeResponse): RatingTarget {
+  return {
+    malId: r.anime_id,
+    title: r.anime_title,
+    imageUrl: r.anime_image_url,
+    type: r.anime_type,
+    episodes: r.anime_episodes,
+  };
+}
 
 export function MyRatingsPage() {
   const [ratings, setRatings] = useState<RatingWithAnimeResponse[]>([]);
@@ -18,6 +29,8 @@ export function MyRatingsPage() {
   const [activeTab, setActiveTab] = useState<TabFilter>('All');
   const [sortBy, setSortBy] = useState<'date' | 'score'>('date');
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [editTarget, setEditTarget] = useState<RatingTarget | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchRatings = useCallback(async () => {
     setLoading(true);
@@ -49,11 +62,22 @@ export function MyRatingsPage() {
     return result;
   }, [ratings, activeTab, sortBy]);
 
-  const avgScore = ratings.length
-    ? (ratings.reduce((sum, r) => sum + r.score, 0) / ratings.length).toFixed(1)
-    : '0';
+  const handleEdit = (rating: RatingWithAnimeResponse) => {
+    setEditTarget(ratingToTarget(rating));
+  };
 
-  const totalEpisodes = ratings.reduce((sum, r) => sum + (r.anime_episodes ?? 0), 0);
+  const handleEditSubmit = async (animeId: number, score: number, watchStatus: WatchStatus) => {
+    setSubmitting(true);
+    try {
+      await upsertRating(animeId, score, watchStatus);
+      setEditTarget(null);
+      await fetchRatings();
+    } catch {
+      // API error — modal stays open so user can retry
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleDelete = async (malId: number) => {
     setDeletingId(malId);
@@ -109,13 +133,6 @@ export function MyRatingsPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold text-on-surface mb-8">My Ratings</h1>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatSummaryCard icon={Hash} label="Total Rated" value={ratings.length} />
-        <StatSummaryCard icon={Star} label="Average Score" value={avgScore} />
-        <StatSummaryCard icon={Film} label="Episodes Watched" value={totalEpisodes} />
-        <StatSummaryCard icon={BarChart3} label="Completed" value={ratings.filter(r => r.watch_status === 'Completed').length} />
-      </div>
-
       <div className="flex flex-wrap gap-2 mb-6">
         {tabs.map(tab => (
           <Button
@@ -149,7 +166,7 @@ export function MyRatingsPage() {
               <th className="text-left text-xs text-text-muted font-medium px-4 py-3 hidden sm:table-cell">Status</th>
               <th className="text-center text-xs text-text-muted font-medium px-4 py-3">Score</th>
               <th className="text-right text-xs text-text-muted font-medium px-4 py-3 hidden md:table-cell">Date</th>
-              <th className="text-center text-xs text-text-muted font-medium px-4 py-3 w-12"></th>
+              <th className="text-center text-xs text-text-muted font-medium px-4 py-3 w-20"></th>
             </tr>
           </thead>
           <tbody>
@@ -189,21 +206,38 @@ export function MyRatingsPage() {
                     {new Date(rating.updated_at).toLocaleDateString()}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-center">
-                  <button
-                    onClick={() => handleDelete(rating.anime_id)}
-                    disabled={deletingId === rating.anime_id}
-                    className="text-outline hover:text-error transition-colors disabled:opacity-50"
-                    title="Delete rating"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => handleEdit(rating)}
+                      className="text-outline hover:text-primary transition-colors"
+                      title="Edit rating"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(rating.anime_id)}
+                      disabled={deletingId === rating.anime_id}
+                      className="text-outline hover:text-error transition-colors disabled:opacity-50"
+                      title="Delete rating"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <RatingModal
+        target={editTarget}
+        isOpen={!!editTarget}
+        onClose={() => setEditTarget(null)}
+        onSubmit={handleEditSubmit}
+        submitting={submitting}
+      />
     </div>
   );
 }

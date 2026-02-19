@@ -11,7 +11,7 @@ import com.anirec.global.exception.AnimeNotFoundException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDateTime
 
 @Service
@@ -19,32 +19,34 @@ class RatingService(
     private val ratingRepository: RatingRepository,
     private val animeRepository: AnimeRepository,
     private val memberRepository: MemberRepository,
+    private val transactionTemplate: TransactionTemplate,
 ) {
 
-    @Transactional
     suspend fun upsertRating(memberId: String, request: RatingRequest): RatingResponse =
         withContext(Dispatchers.IO) {
-            val anime = animeRepository.findByMalId(request.animeId)
-                ?: throw AnimeNotFoundException("Anime not found: mal_id=${request.animeId}")
-            val member = memberRepository.getReferenceById(memberId)
+            transactionTemplate.execute {
+                val anime = animeRepository.findByMalId(request.animeId)
+                    ?: throw AnimeNotFoundException("Anime not found: mal_id=${request.animeId}")
+                val member = memberRepository.getReferenceById(memberId)
 
-            val existing = ratingRepository.findByMemberIdAndAnimeId(memberId, anime.id)
-            val rating = if (existing != null) {
-                existing.score = request.score
-                existing.watchStatus = request.watchStatus
-                existing.updatedAt = LocalDateTime.now()
-                ratingRepository.save(existing)
-            } else {
-                ratingRepository.save(
-                    Rating(
-                        member = member,
-                        anime = anime,
-                        score = request.score,
-                        watchStatus = request.watchStatus,
+                val existing = ratingRepository.findByMemberIdAndAnimeId(memberId, anime.id)
+                val rating = if (existing != null) {
+                    existing.score = request.score
+                    existing.watchStatus = request.watchStatus
+                    existing.updatedAt = LocalDateTime.now()
+                    ratingRepository.save(existing)
+                } else {
+                    ratingRepository.save(
+                        Rating(
+                            member = member,
+                            anime = anime,
+                            score = request.score,
+                            watchStatus = request.watchStatus,
+                        )
                     )
-                )
-            }
-            toResponse(rating)
+                }
+                toResponse(rating)
+            }!!
         }
 
     suspend fun getMyRatings(memberId: String): List<RatingWithAnimeResponse> =
@@ -58,12 +60,13 @@ class RatingService(
             ratingRepository.findByMemberIdAndAnimeId(memberId, anime.id)?.let { toResponse(it) }
         }
 
-    @Transactional
     suspend fun deleteRating(memberId: String, malId: Long) =
         withContext(Dispatchers.IO) {
-            val anime = animeRepository.findByMalId(malId)
-                ?: throw AnimeNotFoundException("Anime not found: mal_id=$malId")
-            ratingRepository.deleteByMemberIdAndAnimeId(memberId, anime.id)
+            transactionTemplate.execute {
+                val anime = animeRepository.findByMalId(malId)
+                    ?: throw AnimeNotFoundException("Anime not found: mal_id=$malId")
+                ratingRepository.deleteByMemberIdAndAnimeId(memberId, anime.id)
+            }
         }
 
     private fun toResponse(rating: Rating) = RatingResponse(

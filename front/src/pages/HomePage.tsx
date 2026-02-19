@@ -4,7 +4,8 @@ import { TrendingSection } from '@/components/home/TrendingSection';
 import { SeasonalSection } from '@/components/home/SeasonalSection';
 import { TopAnimeList } from '@/components/home/TopAnimeList';
 import { RecommendationSection } from '@/components/recommendation/RecommendationSection';
-import { RatingModal } from '@/components/rating/RatingModal';
+import { RatingModal, animeToRatingTarget } from '@/components/rating/RatingModal';
+import type { RatingTarget } from '@/components/rating/RatingModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useSeasonalAnime } from '@/hooks/useSeasonalAnime';
 import { useTopAnime } from '@/hooks/useTopAnime';
@@ -18,7 +19,7 @@ const SEASONS = ['winter', 'spring', 'summer', 'fall'] as const;
 
 export function HomePage() {
   const { isAuthenticated } = useAuth();
-  const [ratingAnime, setRatingAnime] = useState<Anime | null>(null);
+  const [ratingTarget, setRatingTarget] = useState<RatingTarget | null>(null);
 
   const currentYear = new Date().getFullYear();
   const currentSeason = SEASONS[Math.floor(new Date().getMonth() / 3)];
@@ -35,12 +36,12 @@ export function HomePage() {
 
   const [submitting, setSubmitting] = useState(false);
 
-  const handleRate = (anime: Anime) => setRatingAnime(anime);
+  const handleRate = (anime: Anime) => setRatingTarget(animeToRatingTarget(anime));
   const handleRatingSubmit = async (animeId: number, score: number, status: WatchStatus) => {
     setSubmitting(true);
     try {
       await upsertRating(animeId, score, status);
-      setRatingAnime(null);
+      setRatingTarget(null);
     } catch {
       // API error — modal stays open so user can retry
     } finally {
@@ -71,9 +72,9 @@ export function HomePage() {
       <TopAnimeList anime={topAnime} isLoading={topLoading} error={topError} />
 
       <RatingModal
-        anime={ratingAnime}
-        isOpen={!!ratingAnime}
-        onClose={() => setRatingAnime(null)}
+        target={ratingTarget}
+        isOpen={!!ratingTarget}
+        onClose={() => setRatingTarget(null)}
         onSubmit={handleRatingSubmit}
         submitting={submitting}
       />

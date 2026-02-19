@@ -6,19 +6,42 @@ import { RatingInput } from './RatingInput';
 import { RatingSlider } from './RatingSlider';
 import { WatchStatusSelector } from './WatchStatusSelector';
 import { getRating } from '@/api/ratingApi';
-import type { Anime } from '@/types/anime';
 import type { WatchStatus } from '@/types/rating';
 import { PLACEHOLDER_IMAGE } from '@/data/constants';
 
+export interface RatingTarget {
+  malId: number;
+  title: string;
+  imageUrl: string | null;
+  type: string | null;
+  episodes: number | null;
+}
+
+export function animeToRatingTarget(anime: {
+  mal_id: number;
+  title: string;
+  images: { jpg: { image_url: string } };
+  type: string | null;
+  episodes: number | null;
+}): RatingTarget {
+  return {
+    malId: anime.mal_id,
+    title: anime.title,
+    imageUrl: anime.images.jpg.image_url,
+    type: anime.type,
+    episodes: anime.episodes,
+  };
+}
+
 interface RatingModalProps {
-  anime: Anime | null;
+  target: RatingTarget | null;
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (animeId: number, score: number, status: WatchStatus) => void;
   submitting?: boolean;
 }
 
-export function RatingModal({ anime, isOpen, onClose, onSubmit, submitting }: RatingModalProps) {
+export function RatingModal({ target, isOpen, onClose, onSubmit, submitting }: RatingModalProps) {
   const [score, setScore] = useState(0);
   const [watchStatus, setWatchStatus] = useState<WatchStatus | null>(null);
   const [useSlider, setUseSlider] = useState(false);
@@ -26,7 +49,7 @@ export function RatingModal({ anime, isOpen, onClose, onSubmit, submitting }: Ra
   const [isEdit, setIsEdit] = useState(false);
 
   useEffect(() => {
-    if (!anime || !isOpen) return;
+    if (!target || !isOpen) return;
 
     let cancelled = false;
     setLoading(true);
@@ -34,7 +57,7 @@ export function RatingModal({ anime, isOpen, onClose, onSubmit, submitting }: Ra
     setWatchStatus(null);
     setIsEdit(false);
 
-    getRating(anime.mal_id)
+    getRating(target.malId)
       .then(existing => {
         if (cancelled) return;
         if (existing) {
@@ -51,15 +74,15 @@ export function RatingModal({ anime, isOpen, onClose, onSubmit, submitting }: Ra
       });
 
     return () => { cancelled = true; };
-  }, [anime, isOpen]);
+  }, [target, isOpen]);
 
-  if (!anime) return null;
+  if (!target) return null;
 
   const canSubmit = score > 0 && watchStatus !== null && !submitting;
 
   const handleSubmit = () => {
     if (!canSubmit) return;
-    onSubmit(anime.mal_id, score, watchStatus);
+    onSubmit(target.malId, score, watchStatus);
   };
 
   return (
@@ -67,13 +90,13 @@ export function RatingModal({ anime, isOpen, onClose, onSubmit, submitting }: Ra
       <div className="space-y-6">
         <div className="flex gap-4">
           <img
-            src={anime.images.jpg.image_url || PLACEHOLDER_IMAGE}
-            alt={anime.title}
+            src={target.imageUrl || PLACEHOLDER_IMAGE}
+            alt={target.title}
             className="w-16 h-22 rounded-lg object-cover shrink-0"
           />
           <div>
-            <h4 className="font-medium text-on-surface">{anime.title}</h4>
-            <p className="text-sm text-outline mt-1">{anime.type} · {anime.episodes ?? '?'} episodes</p>
+            <h4 className="font-medium text-on-surface">{target.title}</h4>
+            <p className="text-sm text-outline mt-1">{target.type ?? '?'} · {target.episodes ?? '?'} episodes</p>
           </div>
         </div>
 

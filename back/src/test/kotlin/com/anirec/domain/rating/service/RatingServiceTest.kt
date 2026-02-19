@@ -17,6 +17,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.springframework.transaction.support.TransactionCallback
+import org.springframework.transaction.support.TransactionTemplate
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -26,8 +28,14 @@ class RatingServiceTest {
     private val ratingRepository: RatingRepository = mockk()
     private val animeRepository: AnimeRepository = mockk()
     private val memberRepository: MemberRepository = mockk()
+    private val transactionTemplate: TransactionTemplate = mockk<TransactionTemplate>().also {
+        every { it.execute(any<TransactionCallback<*>>()) } answers {
+            val callback = firstArg<TransactionCallback<*>>()
+            callback.doInTransaction(mockk())
+        }
+    }
 
-    private val service = RatingService(ratingRepository, animeRepository, memberRepository)
+    private val service = RatingService(ratingRepository, animeRepository, memberRepository, transactionTemplate)
 
     private val memberId = "user-001"
     private val member = Member(id = memberId, email = "test@test.com", username = "tester")

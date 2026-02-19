@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { FilterBar } from '@/components/filters/FilterBar';
 import { AnimeGrid } from '@/components/anime/AnimeGrid';
-import { RatingModal } from '@/components/rating/RatingModal';
+import { RatingModal, animeToRatingTarget } from '@/components/rating/RatingModal';
+import type { RatingTarget } from '@/components/rating/RatingModal';
 import { Spinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
@@ -19,7 +20,7 @@ export function SearchAnimePage() {
   const { isAuthenticated } = useAuth();
   const [page, setPage] = useState(1);
   const [retryKey, setRetryKey] = useState(0);
-  const [ratingAnime, setRatingAnime] = useState<Anime | null>(null);
+  const [ratingTarget, setRatingTarget] = useState<RatingTarget | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const searchParams = buildSearchParams(page);
@@ -37,13 +38,13 @@ export function SearchAnimePage() {
     setPage(1);
   };
 
-  const handleRate = (anime: Anime) => setRatingAnime(anime);
+  const handleRate = (anime: Anime) => setRatingTarget(animeToRatingTarget(anime));
 
   const handleSubmit = async (animeId: number, score: number, watchStatus: WatchStatus) => {
     setSubmitting(true);
     try {
       await upsertRating(animeId, score, watchStatus);
-      setRatingAnime(null);
+      setRatingTarget(null);
     } catch {
       // API error — modal stays open so user can retry
     } finally {
@@ -92,9 +93,9 @@ export function SearchAnimePage() {
       </div>
 
       <RatingModal
-        anime={ratingAnime}
-        isOpen={!!ratingAnime}
-        onClose={() => setRatingAnime(null)}
+        target={ratingTarget}
+        isOpen={!!ratingTarget}
+        onClose={() => setRatingTarget(null)}
         onSubmit={handleSubmit}
         submitting={submitting}
       />

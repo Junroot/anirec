@@ -18,7 +18,7 @@ import java.time.LocalDate
     indexes = [
         Index(name = "idx_anime_score", columnList = "score"),
         Index(name = "idx_anime_popularity", columnList = "popularity"),
-        Index(name = "idx_anime_rank", columnList = "rank"),
+        Index(name = "idx_anime_rank", columnList = "`rank`"),
         Index(name = "idx_anime_year_season", columnList = "year, season"),
         Index(name = "idx_anime_status", columnList = "status"),
         Index(name = "idx_anime_type", columnList = "type"),
