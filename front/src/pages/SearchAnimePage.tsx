@@ -9,13 +9,18 @@ import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/ui/Pagination';
 import { useFilterState } from '@/hooks/useFilterState';
 import { useAnimeSearch } from '@/hooks/useAnimeSearch';
+import { useAuth } from '@/hooks/useAuth';
+import { upsertRating } from '@/api/ratingApi';
 import type { Anime } from '@/types/anime';
+import type { WatchStatus } from '@/types/rating';
 
 export function SearchAnimePage() {
   const { filters, updateFilter, resetFilters, buildSearchParams } = useFilterState();
+  const { isAuthenticated } = useAuth();
   const [page, setPage] = useState(1);
   const [retryKey, setRetryKey] = useState(0);
   const [ratingAnime, setRatingAnime] = useState<Anime | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const searchParams = buildSearchParams(page);
   const { data, pagination, isLoading, error } = useAnimeSearch(searchParams, retryKey);
@@ -33,6 +38,18 @@ export function SearchAnimePage() {
   };
 
   const handleRate = (anime: Anime) => setRatingAnime(anime);
+
+  const handleSubmit = async (animeId: number, score: number, watchStatus: WatchStatus) => {
+    setSubmitting(true);
+    try {
+      await upsertRating(animeId, score, watchStatus);
+      setRatingAnime(null);
+    } catch {
+      // API error — modal stays open so user can retry
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -60,7 +77,7 @@ export function SearchAnimePage() {
           <Spinner size="lg" className="py-20" />
         ) : (
           <div className={isLoading ? 'opacity-50 pointer-events-none' : undefined}>
-            <AnimeGrid anime={data} onRate={handleRate} />
+            <AnimeGrid anime={data} onRate={isAuthenticated ? handleRate : undefined} />
           </div>
         )}
 
@@ -78,7 +95,8 @@ export function SearchAnimePage() {
         anime={ratingAnime}
         isOpen={!!ratingAnime}
         onClose={() => setRatingAnime(null)}
-        onSubmit={() => {/* Mock: would save */}}
+        onSubmit={handleSubmit}
+        submitting={submitting}
       />
     </div>
   );

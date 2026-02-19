@@ -3,7 +3,7 @@ import { Eye, CheckCircle, Clock, XCircle, Pause } from 'lucide-react';
 import type { WatchStatus } from '@/types/rating';
 
 interface WatchStatusSelectorProps {
-  value: WatchStatus;
+  value: WatchStatus | null;
   onChange: (status: WatchStatus) => void;
 }
 

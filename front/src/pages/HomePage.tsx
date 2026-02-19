@@ -10,6 +10,7 @@ import { useSeasonalAnime } from '@/hooks/useSeasonalAnime';
 import { useTopAnime } from '@/hooks/useTopAnime';
 import { mockAnime } from '@/data/mockAnime';
 import { mockRecommendations, mockTasteGroup } from '@/data/mockRecommendations';
+import { upsertRating } from '@/api/ratingApi';
 import type { Anime } from '@/types/anime';
 import type { WatchStatus } from '@/types/rating';
 
@@ -32,9 +33,19 @@ export function HomePage() {
   // mockAnime is still needed for RecommendationSection until recommendation API is implemented
   const animeMap = new Map(mockAnime.map(a => [a.mal_id, a]));
 
+  const [submitting, setSubmitting] = useState(false);
+
   const handleRate = (anime: Anime) => setRatingAnime(anime);
-  const handleRatingSubmit = (_animeId: number, _score: number, _status: WatchStatus) => {
-    // Mock: would save to backend
+  const handleRatingSubmit = async (animeId: number, score: number, status: WatchStatus) => {
+    setSubmitting(true);
+    try {
+      await upsertRating(animeId, score, status);
+      setRatingAnime(null);
+    } catch {
+      // API error — modal stays open so user can retry
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -64,6 +75,7 @@ export function HomePage() {
         isOpen={!!ratingAnime}
         onClose={() => setRatingAnime(null)}
         onSubmit={handleRatingSubmit}
+        submitting={submitting}
       />
     </div>
   );

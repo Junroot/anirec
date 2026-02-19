@@ -22,6 +22,12 @@ class GlobalExceptionHandler {
             .status(HttpStatus.FORBIDDEN)
             .body(ErrorResponse(status = 403, message = ex.message ?: "Forbidden"))
 
+    @ExceptionHandler(AnimeNotFoundException::class)
+    fun handleAnimeNotFound(ex: AnimeNotFoundException): ResponseEntity<ErrorResponse> =
+        ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ErrorResponse(status = 404, message = ex.message ?: "Anime not found"))
+
     @ExceptionHandler(SyncAlreadyRunningException::class)
     fun handleSyncAlreadyRunning(ex: SyncAlreadyRunningException): ResponseEntity<ErrorResponse> =
         ResponseEntity
