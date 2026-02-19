@@ -48,7 +48,8 @@ class AnimeDataSyncService(
         }
 
         val resumePage = startPage
-            ?: ((progress?.lastProcessedPage ?: 0) + 1).coerceAtLeast(1)
+            ?: if (progress == null || progress.status == "COMPLETED") 1
+               else (progress.lastProcessedPage + 1).coerceAtLeast(1)
 
         log.info("[AnimeSync] Starting anime sync from page {}", resumePage)
 

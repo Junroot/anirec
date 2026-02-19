@@ -24,7 +24,6 @@ export interface UserStats {
   totalRated: number;
   averageScore: number;
   favoriteGenre: string;
-  totalEpisodes: number;
   genreStats: GenreStat[];
   ratingDistribution: RatingDistribution[];
   topStudios: StudioStat[];
