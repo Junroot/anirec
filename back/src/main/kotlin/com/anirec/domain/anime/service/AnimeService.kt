@@ -26,6 +26,8 @@ class AnimeService(
         orderBy: String? = null,
         sort: String? = null,
         producers: String? = null,
+        year: Int? = null,
+        season: String? = null,
     ): JikanResponse {
         val genreMalIds = genres?.split(",")?.mapNotNull { it.trim().toLongOrNull() }
         val producerMalIds = producers?.split(",")?.mapNotNull { it.trim().toLongOrNull() }
@@ -38,6 +40,8 @@ class AnimeService(
             producerMalIds = producerMalIds,
             orderBy = orderBy,
             sort = sort,
+            year = year,
+            season = season,
             pageable = pageable,
         )
         return PaginationUtils.toJikanResponse(result)

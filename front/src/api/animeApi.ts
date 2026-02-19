@@ -9,6 +9,8 @@ export interface SearchParams {
   producers?: string;
   orderBy?: string;
   sort?: string;
+  year?: number;
+  season?: string;
   page?: number;
   limit?: number;
 }

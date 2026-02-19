@@ -10,9 +10,10 @@ interface SearchAutocompleteProps {
   onChange: (value: string) => void;
   placeholder: string;
   searchFn: (query: string, signal?: AbortSignal) => Promise<FilterOption[]>;
+  onDisplayNameChange?: (name: string) => void;
 }
 
-export function SearchAutocomplete({ value, onChange, placeholder, searchFn }: SearchAutocompleteProps) {
+export function SearchAutocomplete({ value, onChange, placeholder, searchFn, onDisplayNameChange }: SearchAutocompleteProps) {
   const [query, setQuery] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -66,6 +67,7 @@ export function SearchAutocomplete({ value, onChange, placeholder, searchFn }: S
   useEffect(() => {
     if (!value) {
       setDisplayName('');
+      onDisplayNameChange?.('');
       setQuery('');
     }
   }, [value]);
@@ -83,6 +85,7 @@ export function SearchAutocomplete({ value, onChange, placeholder, searchFn }: S
 
   const handleSelect = (id: number, name: string) => {
     setDisplayName(name);
+    onDisplayNameChange?.(name);
     setQuery('');
     setIsOpen(false);
     onChange(String(id));
@@ -90,6 +93,7 @@ export function SearchAutocomplete({ value, onChange, placeholder, searchFn }: S
 
   const handleClear = () => {
     setDisplayName('');
+    onDisplayNameChange?.('');
     setQuery('');
     setIsOpen(false);
     onChange('');
@@ -112,7 +116,7 @@ export function SearchAutocomplete({ value, onChange, placeholder, searchFn }: S
   return (
     <div ref={containerRef} className="relative">
       {displayName ? (
-        <div className="flex items-center gap-1.5 px-3 py-2.5 bg-surface-container-high border border-outline-variant rounded-lg text-on-surface text-sm">
+        <div className="flex items-center gap-1.5 px-3 py-2.5 bg-primary/10 border border-primary rounded-lg text-primary text-sm">
           <span className="truncate max-w-[120px]">{displayName}</span>
           <button
             type="button"

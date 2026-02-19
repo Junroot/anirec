@@ -22,6 +22,8 @@ class AnimeRepositoryCustomImpl(
         producerMalIds: List<Long>?,
         orderBy: String?,
         sort: String?,
+        year: Int?,
+        season: String?,
         pageable: Pageable,
     ): Page<Anime> {
         val where = BooleanBuilder()
@@ -30,6 +32,8 @@ class AnimeRepositoryCustomImpl(
         status?.let { where.and(anime.status.eq(mapStatus(it))) }
         genreMalIds?.takeIf { it.isNotEmpty() }?.let { where.and(anime.genres.any().malId.`in`(it)) }
         producerMalIds?.takeIf { it.isNotEmpty() }?.let { where.and(anime.studios.any().malId.`in`(it)) }
+        year?.let { where.and(anime.year.eq(it)) }
+        season?.let { where.and(anime.season.equalsIgnoreCase(it)) }
 
         val order = buildOrderSpecifier(orderBy, sort)
 

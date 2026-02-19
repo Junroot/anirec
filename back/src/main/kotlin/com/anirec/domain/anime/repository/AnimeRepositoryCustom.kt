@@ -13,6 +13,8 @@ interface AnimeRepositoryCustom {
         producerMalIds: List<Long>? = null,
         orderBy: String? = null,
         sort: String? = null,
+        year: Int? = null,
+        season: String? = null,
         pageable: Pageable,
     ): Page<Anime>
 

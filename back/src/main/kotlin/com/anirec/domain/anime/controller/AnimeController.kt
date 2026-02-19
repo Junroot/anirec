@@ -21,10 +21,12 @@ class AnimeController(private val animeService: AnimeService) {
         @RequestParam(required = false) producers: String?,
         @RequestParam(required = false) orderBy: String?,
         @RequestParam(required = false) sort: String?,
+        @RequestParam(required = false) year: Int?,
+        @RequestParam(required = false) season: String?,
         @RequestParam(required = false) page: Int?,
         @RequestParam(required = false) limit: Int?,
     ): JikanResponse =
-        animeService.search(page = page, limit = limit, type = type, status = status, genres = genres, orderBy = orderBy, sort = sort, producers = producers)
+        animeService.search(page = page, limit = limit, type = type, status = status, genres = genres, orderBy = orderBy, sort = sort, producers = producers, year = year, season = season)
 
     @GetMapping("/top")
     suspend fun getTop(

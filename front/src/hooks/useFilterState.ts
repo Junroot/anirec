@@ -7,6 +7,8 @@ export interface FilterState {
   format: string;
   status: string;
   producer: string;
+  year: string;
+  season: string;
   sort: string;
 }
 
@@ -15,6 +17,8 @@ const defaultFilters: FilterState = {
   format: '',
   status: '',
   producer: '',
+  year: '',
+  season: '',
   sort: 'score-desc',
 };
 
@@ -34,6 +38,8 @@ export function useFilterState() {
       type: filters.format || undefined,
       status: filters.status || undefined,
       producers: filters.producer || undefined,
+      year: filters.year ? Number(filters.year) : undefined,
+      season: filters.season || undefined,
       orderBy: sortMapping?.orderBy,
       sort: sortMapping?.sort,
       page,

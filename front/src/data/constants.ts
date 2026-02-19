@@ -31,6 +31,21 @@ export const STATUSES: { value: string; label: string }[] = [
   { value: 'upcoming', label: 'Upcoming' },
 ];
 
+export const SEASONS: { value: string; label: string }[] = [
+  { value: 'winter', label: 'Winter' },
+  { value: 'spring', label: 'Spring' },
+  { value: 'summer', label: 'Summer' },
+  { value: 'fall', label: 'Fall' },
+];
+
+export const YEARS: { value: string; label: string }[] = Array.from(
+  { length: 2026 - 1917 + 1 },
+  (_, i) => {
+    const y = String(2026 - i);
+    return { value: y, label: y };
+  },
+);
+
 export const WATCH_STATUSES = [
   'Watching', 'Completed', 'Plan to Watch', 'Dropped', 'On Hold',
 ] as const;
